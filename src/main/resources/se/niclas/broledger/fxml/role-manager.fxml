@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Region?>
+
+<VBox styleClass="app-frame" minWidth="820" minHeight="500"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="se.niclas.broledger.ui.RoleManagerController">
+
+    <!-- Custom title bar -->
+    <HBox fx:id="titleBar" styleClass="title-bar" alignment="CENTER_LEFT">
+        <Label text="Manage Roles" styleClass="title-bar-label"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="✕" styleClass="window-btn,window-btn-close" onAction="#close" focusTraversable="false"/>
+    </HBox>
+
+    <!-- Content -->
+    <SplitPane dividerPositions="0.37" VBox.vgrow="ALWAYS">
+
+        <!-- Left: role list -->
+        <VBox styleClass="sidebar" minWidth="300">
+            <Label text="Roles" styleClass="sidebar-header"/>
+            <ListView fx:id="roleList" VBox.vgrow="ALWAYS"/>
+            <HBox spacing="8" styleClass="role-list-buttons">
+                <padding><Insets top="8" right="8" bottom="8" left="8"/></padding>
+                <Button text="+ Add"    onAction="#addRole"      styleClass="fancy-btn"/>
+                <Button text="− Delete" onAction="#deleteRole"   styleClass="fancy-btn"/>
+                <Button text="▲"        onAction="#moveRoleUp"   styleClass="fancy-btn" style="-fx-min-width: 36;"/>
+                <Button text="▼"        onAction="#moveRoleDown" styleClass="fancy-btn" style="-fx-min-width: 36;"/>
+            </HBox>
+        </VBox>
+
+        <!-- Right: edit form -->
+        <VBox spacing="14" styleClass="role-editor">
+            <padding><Insets top="16" right="20" bottom="16" left="20"/></padding>
+
+            <!-- Name -->
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Name:" styleClass="field-label" minWidth="80"/>
+                <TextField fx:id="nameField" styleClass="role-field" promptText="Role name"
+                           HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            </HBox>
+
+            <!-- Position -->
+            <HBox spacing="16" alignment="CENTER_LEFT">
+                <Label text="Position:" styleClass="field-label" minWidth="80"/>
+                <RadioButton fx:id="frontlineRadio" text="Frontline" styleClass="role-radio">
+                    <toggleGroup><ToggleGroup fx:id="positionGroup"/></toggleGroup>
+                </RadioButton>
+                <RadioButton fx:id="backlineRadio" text="Backline" styleClass="role-radio"
+                             toggleGroup="$positionGroup"/>
+            </HBox>
+
+            <!-- Attributes (populated programmatically) -->
+            <VBox spacing="6" styleClass="card-section" VBox.vgrow="ALWAYS">
+                <Label text="Attributes" styleClass="section-header"/>
+                <GridPane fx:id="statEditorGrid" hgap="12" vgap="6"/>
+            </VBox>
+
+            <!-- Buttons -->
+            <HBox spacing="8" alignment="CENTER_RIGHT">
+                <Button text="Save Role" onAction="#saveRole" styleClass="fancy-btn"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Close"     onAction="#close"    styleClass="fancy-btn"/>
+            </HBox>
+        </VBox>
+
+    </SplitPane>
+
+</VBox>

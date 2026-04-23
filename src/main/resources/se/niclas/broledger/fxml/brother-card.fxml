@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="se.niclas.broledger.ui.BrotherCardController"
+      styleClass="brother-card" spacing="14">
+    <padding><Insets top="14" right="16" bottom="16" left="16"/></padding>
+
+    <!-- 0. Navigation toolbar -->
+    <HBox alignment="CENTER_LEFT">
+        <Button fx:id="backBtn" text="← Back" styleClass="overview-potential-toggle"/>
+    </HBox>
+
+    <!-- 1. Header: portrait + name / title / background -->
+    <HBox styleClass="card-header" spacing="14" alignment="CENTER_LEFT">
+        <ImageView fx:id="portraitView" fitWidth="96" fitHeight="96" preserveRatio="true"/>
+        <VBox spacing="4" alignment="CENTER_LEFT">
+            <Label fx:id="nameLabel"       styleClass="card-name"/>
+            <Label fx:id="titleLabel"      styleClass="card-title"/>
+            <Label fx:id="backgroundLabel" styleClass="card-background"/>
+        </VBox>
+    </HBox>
+
+    <!-- 2. Traits -->
+    <VBox spacing="6" styleClass="card-section">
+        <Label text="Traits" styleClass="section-header"/>
+        <FlowPane fx:id="traitsPane" hgap="6" vgap="6"/>
+    </VBox>
+
+    <!-- 3. Role -->
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Label text="Role:" styleClass="field-label"/>
+        <ComboBox fx:id="roleCombo" styleClass="role-combo" maxWidth="300"/>
+        <Button fx:id="clearRoleBtn" text="Clear" styleClass="overview-potential-toggle"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="resetRolesBtn"     text="Reset"     styleClass="overview-potential-toggle"/>
+        <Button fx:id="showAllRolesBtn"   text="Show All"  styleClass="overview-potential-toggle"/>
+        <Button fx:id="frontlineRolesBtn" text="Frontline" styleClass="overview-potential-toggle"/>
+        <Button fx:id="backlineRolesBtn"  text="Backline"  styleClass="overview-potential-toggle"/>
+    </HBox>
+
+    <!-- 4. Stats grid (populated programmatically) -->
+    <VBox spacing="6" styleClass="card-section">
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="Attributes" styleClass="section-header"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="autoAssignBtn" text="Auto-assign by role" styleClass="overview-potential-toggle"/>
+        </HBox>
+        <GridPane fx:id="statsGrid" hgap="10" vgap="5"/>
+    </VBox>
+
+    <!-- 5. Perks (populated programmatically) -->
+    <VBox spacing="6" styleClass="card-section">
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Perks" styleClass="section-header"/>
+            <Button fx:id="perkSortBtn" styleClass="overview-potential-toggle"/>
+            <Label fx:id="perkPointsLabel" styleClass="level-pending-badge" visible="false" managed="false"/>
+        </HBox>
+        <FlowPane fx:id="perksPane" hgap="6" vgap="6"/>
+    </VBox>
+
+    <!-- 6. Equipment (populated programmatically) -->
+    <VBox spacing="6" styleClass="card-section">
+        <Label text="Equipment" styleClass="section-header"/>
+        <HBox fx:id="equipmentPane" spacing="10" alignment="CENTER_LEFT"/>
+    </VBox>
+
+    <!-- 7. Footer: derived stats -->
+    <HBox styleClass="card-footer" spacing="24" alignment="CENTER_LEFT">
+        <Label fx:id="armorLabel"   styleClass="footer-stat"/>
+        <Label fx:id="fatigueLabel" styleClass="footer-stat"/>
+        <Label fx:id="damageLabel"  styleClass="footer-stat"/>
+    </HBox>
+
+</VBox>

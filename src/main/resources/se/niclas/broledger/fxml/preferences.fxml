@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox styleClass="app-frame" minWidth="420" minHeight="200"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="se.niclas.broledger.ui.PreferencesController">
+
+    <!-- Custom title bar -->
+    <HBox fx:id="titleBar" styleClass="title-bar" alignment="CENTER_LEFT">
+        <Label text="Preferences" styleClass="title-bar-label"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="✕" styleClass="window-btn,window-btn-close" onAction="#close" focusTraversable="false"/>
+    </HBox>
+
+    <!-- Content -->
+    <VBox spacing="16" VBox.vgrow="ALWAYS">
+        <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+        <!-- Expected stats mode -->
+        <VBox spacing="8" styleClass="card-section">
+            <Label text="Expected Stats Mode" styleClass="section-header"/>
+            <Label text="Controls how expected stat values are calculated in the detail view and overview." styleClass="stat-label" wrapText="true"/>
+            <HBox spacing="16" alignment="CENTER_LEFT">
+                <RadioButton fx:id="naiveRadio" text="Naive — current + mean × count  (default, always live)" styleClass="role-radio">
+                    <toggleGroup><ToggleGroup fx:id="modeGroup"/></toggleGroup>
+                </RadioButton>
+                <RadioButton fx:id="greedyRadio" text="Greedy — optimal selection benefit  (requires full allocation)" styleClass="role-radio"
+                             toggleGroup="$modeGroup"/>
+            </HBox>
+        </VBox>
+
+        <Region VBox.vgrow="ALWAYS"/>
+
+        <!-- Footer -->
+        <HBox alignment="CENTER_RIGHT">
+            <Button text="Close" onAction="#close" styleClass="fancy-btn"/>
+        </HBox>
+    </VBox>
+
+</VBox>

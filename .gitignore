@@ -1,0 +1,17 @@
+.claude/
+.idea/
+.mvn/
+
+mvnw*
+
+game-art/
+data/
+
+brothers_report.txt
+*.png
+*.lnk
+BACKLOG_*.md
+
+target/
+dependency-reduced-pom.xml
+__pycache__/
