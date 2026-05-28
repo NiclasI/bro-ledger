@@ -60,8 +60,17 @@ public class AssetExtractor {
             throws IOException {
         Map<String, String> fileMap = loadAssetMap();
         try (ZipFile zf = new ZipFile(datFile.toFile(), StandardCharsets.UTF_8)) {
-            Map<String, String> mapped = doExtractMapped(zf, outDir, fileMap, listener);
-            List<String> fallback = doExtractFallback(zf, outDir, new HashSet<>(mapped.keySet()), listener);
+            List<? extends java.util.zip.ZipEntry> entries = Collections.list(zf.entries());
+            int combinedTotal = fileMap.size() + entries.size();
+
+            int phase1Offset = fileMap.size();
+            ProgressListener phase1Listener = listener == null ? null :
+                    (done, ignored, file) -> listener.onProgress(done, combinedTotal, file);
+            ProgressListener phase2Listener = listener == null ? null :
+                    (done, ignored, file) -> listener.onProgress(phase1Offset + done, combinedTotal, file);
+
+            Map<String, String> mapped = doExtractMapped(zf, outDir, fileMap, phase1Listener);
+            List<String> fallback = doExtractFallback(zf, outDir, new HashSet<>(mapped.keySet()), entries, phase2Listener);
             int missing = fileMap.size() - mapped.size();
             return new ExtractionResult(fileMap.size(), mapped.size(), missing, fallback.size());
         }
@@ -77,8 +86,10 @@ public class AssetExtractor {
             String src = entry.getKey();
             String dst = entry.getValue();
             var zipEntry = zf.getEntry(src);
+            String label;
             if (zipEntry == null) {
                 log.warning("Archive missing: " + src);
+                label = "[missing] " + src;
             } else {
                 Path target = outDir.resolve(dst);
                 Files.createDirectories(target.getParent());
@@ -86,23 +97,25 @@ public class AssetExtractor {
                     Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
                 }
                 mapped.put(src, dst);
+                label = dst;
             }
             done++;
-            if (listener != null) listener.onProgress(done, total, dst);
+            if (listener != null) listener.onProgress(done, total, label);
         }
         return mapped;
     }
 
     private List<String> doExtractFallback(ZipFile zf, Path outDir,
                                            Set<String> alreadyMapped,
+                                           List<? extends java.util.zip.ZipEntry> entries,
                                            ProgressListener listener) throws IOException {
         List<String> fallback = new ArrayList<>();
-        List<? extends java.util.zip.ZipEntry> entries = Collections.list(zf.entries());
         int done = 0;
         for (var entry : entries) {
+            done++;
             String name = entry.getName();
-            if (alreadyMapped.contains(name)) { done++; continue; }
-            if (!name.toLowerCase(Locale.ROOT).endsWith(".png")) { done++; continue; }
+            if (alreadyMapped.contains(name)) { continue; }
+            if (!name.toLowerCase(Locale.ROOT).endsWith(".png")) { continue; }
             for (Map.Entry<String, String> pattern : PATTERN_MAP.entrySet()) {
                 if (name.contains(pattern.getKey())) {
                     String sub = pattern.getValue();
@@ -117,7 +130,6 @@ public class AssetExtractor {
                     break;
                 }
             }
-            done++;
         }
         return fallback;
     }

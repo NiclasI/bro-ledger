@@ -133,9 +133,12 @@ public class SetupController implements Initializable {
         task.setOnFailed(e -> {
             progressBar.progressProperty().unbind();
             progressLabel.textProperty().unbind();
-            progressLabel.setText("Extraction failed: " + task.getException().getMessage());
+            progressLabel.setText("Extraction failed: " + task.getException().toString());
             extractBtn.setDisable(false);
             log.warning("Extraction failed: " + task.getException());
+            PauseTransition pause = new PauseTransition(Duration.seconds(3));
+            pause.setOnFinished(ev -> close());
+            pause.play();
         });
 
         Thread t = new Thread(task, "asset-extractor");
