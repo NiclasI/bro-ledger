@@ -2,9 +2,11 @@ package se.niclas.broledger;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -13,6 +15,7 @@ import se.niclas.broledger.service.DictionaryService;
 import se.niclas.broledger.service.ImageMapService;
 import se.niclas.broledger.service.StatModifierService;
 import se.niclas.broledger.service.WeaponStatsService;
+import se.niclas.broledger.ui.SetupController;
 
 import java.io.File;
 import java.net.URL;
@@ -80,12 +83,33 @@ public class App extends Application {
     private static void promptForGameArtIfNeeded(Stage owner, AppConfig config) {
         if (config.hasGameArtDirectory()) return;
 
-        DirectoryChooser chooser = new DirectoryChooser();
-        chooser.setTitle("Select game-art directory (cancel to skip)");
-        File dir = chooser.showDialog(owner);
-        if (dir != null) {
-            config.gameArtDirectory = dir.getAbsolutePath();
-            config.save();
+        try {
+            URL fxml = App.class.getResource("/se/niclas/broledger/fxml/setup.fxml");
+            if (fxml == null) {
+                log.warning("setup.fxml not found — falling back to DirectoryChooser");
+                DirectoryChooser chooser = new DirectoryChooser();
+                chooser.setTitle("Select game-art directory (cancel to skip)");
+                File dir = chooser.showDialog(owner);
+                if (dir != null) { config.gameArtDirectory = dir.getAbsolutePath(); config.save(); }
+                return;
+            }
+
+            FXMLLoader loader = new FXMLLoader(fxml);
+            Parent root = loader.load();
+
+            Stage dialog = new Stage();
+            dialog.initStyle(StageStyle.UNDECORATED);
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.initOwner(owner);
+
+            Scene scene = new Scene(root);
+            URL css = App.class.getResource("/se/niclas/broledger/css/keeper.css");
+            if (css != null) scene.getStylesheets().add(css.toExternalForm());
+            dialog.setScene(scene);
+            dialog.showAndWait();
+
+        } catch (Exception e) {
+            log.warning("Could not open setup dialog: " + e.getMessage());
         }
     }
 

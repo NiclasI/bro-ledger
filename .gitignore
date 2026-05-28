@@ -5,7 +5,7 @@
 mvnw*
 
 game-art/
-data/
+/data/
 
 brothers_report.txt
 *.png
