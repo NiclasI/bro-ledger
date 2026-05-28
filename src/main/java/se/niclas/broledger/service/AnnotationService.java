@@ -3,6 +3,8 @@ package se.niclas.broledger.service;
 import se.niclas.broledger.model.Brother;
 import se.niclas.broledger.model.BrotherAnnotation;
 import se.niclas.broledger.model.Stat;
+import java.util.Collections;
+import java.util.EnumMap;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -199,7 +201,12 @@ public class AnnotationService {
 
     // ---- level-up reconciliation -------------------------------------------
 
-    public record LevelUpEvent(String name, boolean adjusted) {}
+    public record LevelUpEvent(
+            String name,
+            boolean adjusted,
+            Map<Stat, Integer> statDeltas,
+            List<Stat> adjustedStats
+    ) {}
 
     /**
      * Compares old vs new brother lists after a save reload and reduces
@@ -236,38 +243,45 @@ public class AnnotationService {
             log.fine("  [" + nb.name + "]: " + (ob.levelPoints - nb.levelPoints) + " level(s) assigned in-game");
 
             BrotherAnnotation a = get(nb.fingerprint);
-            boolean changed = false;
+            Map<Stat, Integer> statDeltasLocal    = new EnumMap<>(Stat.class);
+            List<Stat>         adjustedStatsLocal = new ArrayList<>();
+
+            for (Stat s : Stat.values()) {
+                int ord = s.ordinal();
+                int si  = s.statIndex();
+
+                if (si >= nb.stats.length || si >= ob.stats.length) continue;
+
+                int statDelta = nb.stats[si] - ob.stats[si];
+                if (statDelta > 0) statDeltasLocal.put(s, statDelta);
+
+                if (a.statIncreases == null) continue;
+                int planned = ord < a.statIncreases.length ? a.statIncreases[ord] : 0;
+
+                log.fine("    " + s.displayName() + ": statDelta=" + statDelta + "  planned=" + planned);
+
+                if (statDelta <= 0 || planned <= 0) continue;
+
+                log.fine("    -> consuming 1 planned increase: " + planned + " -> " + (planned - 1));
+                a.statIncreases[ord] = planned - 1;
+                adjustedStatsLocal.add(s);
+            }
 
             if (a.statIncreases == null) {
                 log.fine("  [" + nb.name + "]: no planned statIncreases — recording level-up without adjustment");
+            } else if (!adjustedStatsLocal.isEmpty()) {
+                log.fine("  [" + nb.name + "]: saving updated statIncreases");
+                setStatIncreases(nb.fingerprint, a.statIncreases);
             } else {
-                for (Stat s : Stat.values()) {
-                    int ord = s.ordinal();
-                    int si  = s.statIndex();
-
-                    if (si >= nb.stats.length || si >= ob.stats.length) continue;
-
-                    int statDelta = nb.stats[si] - ob.stats[si];
-                    int planned   = ord < a.statIncreases.length ? a.statIncreases[ord] : 0;
-
-                    log.fine("    " + s.displayName() + ": statDelta=" + statDelta + "  planned=" + planned);
-
-                    if (statDelta <= 0 || planned <= 0) continue;
-
-                    log.fine("    -> consuming 1 planned increase: " + planned + " -> " + (planned - 1));
-                    a.statIncreases[ord] = planned - 1;
-                    changed = true;
-                }
-
-                if (changed) {
-                    log.fine("  [" + nb.name + "]: saving updated statIncreases");
-                    setStatIncreases(nb.fingerprint, a.statIncreases);
-                } else {
-                    log.fine("  [" + nb.name + "]: leveled up but no planned increases were affected");
-                }
+                log.fine("  [" + nb.name + "]: leveled up but no planned increases were affected");
             }
 
-            events.add(new LevelUpEvent(nb.name, changed));
+            events.add(new LevelUpEvent(
+                    nb.name,
+                    !adjustedStatsLocal.isEmpty(),
+                    Collections.unmodifiableMap(statDeltasLocal),
+                    Collections.unmodifiableList(adjustedStatsLocal)
+            ));
         }
 
         log.fine("reconcileOnReload: done — " + events.size() + " level-up event(s)");
