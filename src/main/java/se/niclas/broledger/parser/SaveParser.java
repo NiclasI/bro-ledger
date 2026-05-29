@@ -2,6 +2,7 @@ package se.niclas.broledger.parser;
 
 import se.niclas.broledger.model.Brother;
 import se.niclas.broledger.service.DictionaryService;
+import se.niclas.broledger.util.HexUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,7 +29,7 @@ public class SaveParser {
     public List<Brother> parse(Path savePath) throws IOException {
         byte[] bytes = Files.readAllBytes(savePath);
         // Convert to lowercase hex string — same as fs.readFile(path, "hex") in Node
-        String hex = bytesToHex(bytes);
+        String hex = HexUtils.toHexLower(bytes);
         return parseHex(hex);
     }
 
@@ -57,11 +58,4 @@ public class SaveParser {
         return brothers;
     }
 
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
-    }
 }

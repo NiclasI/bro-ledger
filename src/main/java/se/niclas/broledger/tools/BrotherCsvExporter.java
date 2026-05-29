@@ -10,6 +10,7 @@ import se.niclas.broledger.service.DictionaryService;
 import se.niclas.broledger.service.RoleService;
 import se.niclas.broledger.service.StatModifierService;
 import se.niclas.broledger.service.StatPotentialCalculator;
+import se.niclas.broledger.ui.OverviewCalc;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -151,16 +152,9 @@ public class BrotherCsvExporter {
     private List<String> sortedPerkNames(Brother b) {
         return b.perkIds.stream()
                 .sorted(Comparator
-                        .comparing((String id) -> {
-                            Integer t = mods.getTier(id);
-                            return t != null ? t : Integer.MAX_VALUE;
-                        })
+                        .comparingInt((String id) -> OverviewCalc.tierOrMax(mods.getTier(id)))
                         .thenComparing(dict::getName))
-                .map(id -> {
-                    Integer tier = mods.getTier(id);
-                    String  name = dict.getName(id);
-                    return tier != null ? "[T" + tier + "] " + name : name;
-                })
+                .map(id -> OverviewCalc.decoratePerkName(mods.getTier(id), dict.getName(id)))
                 .toList();
     }
 

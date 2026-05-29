@@ -344,7 +344,7 @@ public class BrotherOverviewPane {
         if (b.fingerprint == null) return 0;
         String roleId = ctx.annotation().get(b.fingerprint).roleId;
         Role role = roleId != null ? ctx.roles().getById(roleId) : null;
-        return (role != null && !role.frontline) ? 1 : 0;
+        return OverviewCalc.frontlineKey(role);
     }
 
     // ---- column definitions ------------------------------------------------
@@ -432,52 +432,44 @@ public class BrotherOverviewPane {
             }
 
             private void refreshCell(Brother b) {
-                boolean lvlPost11 = b.levelTotal > 11;
-                int remaining     = lvlPost11 ? 0 : ExpectedStatsCalculator.remainingLevels(b);
-                int postLevels    = lvlPost11 ? (b.levelTotal - 11) : 0;
-                int totalBudget   = lvlPost11 ? 3 * postLevels : 3 * remaining;
-
                 int[] increases = b.fingerprint != null
                         ? ctx.annotation().get(b.fingerprint).statIncreases : null;
                 int[] post11inc = b.fingerprint != null
                         ? ctx.annotation().get(b.fingerprint).post11Increases : null;
-                int usedBudget = lvlPost11
-                        ? (post11inc != null ? Arrays.stream(post11inc).sum() : 0)
-                        : (increases != null ? Arrays.stream(increases).sum() : 0);
+                OverviewCalc.LevelBudget budget = OverviewCalc.levelBudget(
+                        b.levelTotal, ExpectedStatsCalculator.remainingLevels(b),
+                        increases, post11inc);
+                int usedBudget  = budget.used();
+                int totalBudget = budget.totalBudget();
 
                 // Label text + color
                 allottedLabel.getStyleClass().removeAll(
                         "level-allotted-green", "level-allotted-post11", "level-allotted-red");
                 if (b.levelTotal == 11) {
                     allottedLabel.setText("");
-                } else if (lvlPost11) {
-                    allottedLabel.setText("-" + usedBudget + "/-" + totalBudget);
-                    if (usedBudget > totalBudget)
-                        allottedLabel.getStyleClass().add("level-allotted-red");
-                    else if (usedBudget < totalBudget)
-                        allottedLabel.getStyleClass().add("level-allotted-green");
                 } else {
-                    allottedLabel.setText(usedBudget + "/" + totalBudget);
-                    if (usedBudget < totalBudget)
-                        allottedLabel.getStyleClass().add("level-allotted-green");
-                    else if (usedBudget > totalBudget)
+                    allottedLabel.setText(OverviewCalc.formatBudgetLabel(budget.post11(), usedBudget, totalBudget));
+                    OverviewCalc.BudgetState bs = OverviewCalc.budgetState(usedBudget, totalBudget);
+                    if (bs == OverviewCalc.BudgetState.OVER)
                         allottedLabel.getStyleClass().add("level-allotted-red");
+                    else if (bs == OverviewCalc.BudgetState.UNDER)
+                        allottedLabel.getStyleClass().add("level-allotted-green");
                 }
 
                 // Tooltip
                 if (b.levelTotal == 11) {
                     setTooltip(styled("Max level reached"));
-                } else if (lvlPost11) {
-                    if (usedBudget < totalBudget) {
+                } else if (budget.post11()) {
+                    if (budget.free() > 0) {
                         setTooltip(styled("Assign post-lv11 increases\n("
                                 + usedBudget + " / " + totalBudget + " used)"));
                     } else {
                         setTooltip(styled("Post-lv11 increases fully assigned"));
                     }
-                } else if (remaining == 0) {
+                } else if (budget.cap() == 0) {
                     setTooltip(styled("Max level reached"));
                 } else if (usedBudget == totalBudget && increases != null) {
-                    setTooltip(buildGuideTooltip(b, remaining, increases));
+                    setTooltip(buildGuideTooltip(b, budget.cap(), increases));
                 } else {
                     String pendingNote = b.levelPoints > 0
                             ? b.levelPoints + " unassigned level-up(s) folded into budget.\n" : "";
@@ -645,8 +637,8 @@ public class BrotherOverviewPane {
                         ? ctx.annotation().get(b.fingerprint).post11Increases : null;
                 boolean cellPost11 = b.levelTotal > 11;
                 int usedBudget = cellPost11
-                        ? (post11inc != null ? Arrays.stream(post11inc).sum() : 0)
-                        : (increases != null ? Arrays.stream(increases).sum() : 0);
+                        ? OverviewCalc.sumOrZero(post11inc)
+                        : OverviewCalc.sumOrZero(increases);
                 ExpectedStatsCalculator.Expected expNaive =
                         ExpectedStatsCalculator.compute(b, STATS[idx], increases, post11inc, ExpectedStatsCalculator.Mode.NAIVE);
                 ExpectedStatsCalculator.Expected expGreedy =
@@ -656,13 +648,7 @@ public class BrotherOverviewPane {
                 ExpectedStatsCalculator.Expected expDisplay =
                         (expMode == ExpectedStatsCalculator.Mode.GREEDY) ? expGreedy : expNaive;
 
-                if (expDisplay.remainingLevels() == 0) {
-                    expected.setText(String.valueOf(expDisplay.finalExpected()));
-                } else if (expDisplay.count() == 0) {
-                    expected.setText("—");
-                } else {
-                    expected.setText(String.valueOf(expDisplay.finalExpected()));
-                }
+                expected.setText(OverviewCalc.expectedDisplay(expDisplay));
 
                 cachedBd         = bd;
                 cachedPot        = p;
@@ -756,8 +742,8 @@ public class BrotherOverviewPane {
                                                 int statDisplayIdx, UiContext ctx) {
         cell.getStyleClass().removeAll("stat-cell-p1", "stat-cell-p2");
         Role role = resolveRole(b, ctx);
-        if (role == null || role.priority == null || statDisplayIdx >= role.priority.length) return;
-        int prio = role.priority[statDisplayIdx];
+        if (role == null) return;
+        int prio = OverviewCalc.priorityAt(role.priority, statDisplayIdx, 0);
         if (prio == 1)      cell.getStyleClass().add("stat-cell-p1");
         else if (prio == 2) cell.getStyleClass().add("stat-cell-p2");
     }
@@ -843,13 +829,9 @@ public class BrotherOverviewPane {
         return buildEquipCell(resolver, dot, sn -> {
             dot.getStyleClass().removeAll("tier-1", "tier-2", "tier-3", "tier-named");
             if (sn != null && sn.slot() != null && !sn.slot().empty && sn.slot().itemId != null) {
-                if ("namedWeapon".equals(sn.slot().itemType)) {
-                    dot.getStyleClass().add("tier-named");
-                } else {
-                    Integer tier = ctx.weaponStats().getTier(sn.slot().itemId);
-                    if (tier != null && tier >= 1 && tier <= 3)
-                        dot.getStyleClass().add("tier-" + tier);
-                }
+                String tsc = OverviewCalc.tierStyleClass(
+                        sn.slot().itemType, ctx.weaponStats().getTier(sn.slot().itemId));
+                if (tsc != null) dot.getStyleClass().add(tsc);
             }
         });
     }
@@ -899,21 +881,11 @@ public class BrotherOverviewPane {
         PerkSortMode mode = perkSortMode.get();
         if (mode == PerkSortMode.OFF) return perkIds;
         List<String> sorted = new ArrayList<>(perkIds);
-        Comparator<String> byTier = Comparator.comparingInt(id -> {
-            Integer t = ctx.statModifier().getTier(id);
-            return t != null ? t : Integer.MAX_VALUE;
-        });
-        Comparator<String> byCommon = Comparator.comparingLong(
-                (String id) -> -perkCounts.getOrDefault(id.toUpperCase(), 0L));
-        Comparator<String> byName = Comparator.comparing(
-                ctx.dict()::getName, String.CASE_INSENSITIVE_ORDER);
-        Comparator<String> comparator = switch (mode) {
-            case TIER           -> byTier.thenComparing(byName);
-            case COMMONALITY    -> byCommon.thenComparing(byName);
-            case TIER_THEN_COMMON -> byTier.thenComparing(byCommon).thenComparing(byName);
-            case OFF            -> Comparator.naturalOrder();
-        };
-        sorted.sort(comparator);
+        sorted.sort(OverviewCalc.perkComparator(
+                mode,
+                id -> OverviewCalc.tierOrMax(ctx.statModifier().getTier(id)),
+                id -> perkCounts.getOrDefault(id.toUpperCase(), 0L),
+                ctx.dict()::getName));
         return sorted;
     }
 
@@ -924,7 +896,9 @@ public class BrotherOverviewPane {
         HBox h = new HBox(3);
         h.setAlignment(Pos.CENTER_LEFT);
         for (TraitEntry t : b.traits) {
-            String name = ctx.dict().getName(t.id);
+            DictionaryEntry entry = ctx.dict().get(t.id);
+            if (entry == null || "internal".equals(entry.type)) continue;
+            String name = entry.name;
             if (name == null || TRAIT_NAME_BLOCKLIST.contains(name)) continue;
             String rel = ctx.imageMap().resolveHex(t.id);
             Path root  = ctx.appConfig().gameArtRoot();
@@ -942,11 +916,7 @@ public class BrotherOverviewPane {
     }
 
     private static List<InventorySlot> gatherPouches(Brother b) {
-        List<InventorySlot> list = new ArrayList<>();
-        if (b.equippedSlots != null && b.equippedSlots.length > 6) list.add(b.equippedSlots[6]);
-        if (b.extraPouches != null) list.addAll(b.extraPouches);
-        while (list.size() < 4) list.add(InventorySlot.empty(6));
-        return list.subList(0, 4);
+        return OverviewCalc.gatherPouches(b.equippedSlots, b.extraPouches);
     }
 
     private Image resolveEquipImage(InventorySlot slot, String slotName) {

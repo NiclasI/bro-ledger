@@ -153,4 +153,26 @@ class AppConfigTest {
         assertEquals(Stat.HEALTH,  result[0]);
         assertEquals(Stat.RESOLVE, result[1]);
     }
+
+    // ---- statAbbrevFromColumnId -------------------------------------------
+
+    @Test
+    void statAbbrevFromColumnId_extractsAbbrev() {
+        assertEquals("HP",  AppConfig.statAbbrevFromColumnId("stat-HP"));
+        assertEquals("MS",  AppConfig.statAbbrevFromColumnId("stat-MS"));
+        assertEquals("RD",  AppConfig.statAbbrevFromColumnId("stat-RD"));
+    }
+
+    @Test
+    void statAbbrevFromColumnId_nullForNonStatColumn() {
+        assertNull(AppConfig.statAbbrevFromColumnId("level"));
+        assertNull(AppConfig.statAbbrevFromColumnId("name"));
+        assertNull(AppConfig.statAbbrevFromColumnId(null));
+    }
+
+    @Test
+    void statAbbrevFromColumnId_nullForEmptyAbbrev() {
+        // "stat-" with nothing after it returns empty string (not null)
+        assertEquals("", AppConfig.statAbbrevFromColumnId("stat-"));
+    }
 }

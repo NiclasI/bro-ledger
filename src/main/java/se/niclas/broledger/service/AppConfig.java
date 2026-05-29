@@ -108,8 +108,8 @@ public class AppConfig {
         List<Stat> ordered = new ArrayList<>();
         Set<Stat>  seen    = new HashSet<>();
         for (String colId : overviewColumnOrder) {
-            if (colId.startsWith("stat-")) {
-                String abbrev = colId.substring(5);
+            String abbrev = statAbbrevFromColumnId(colId);
+            if (abbrev != null) {
                 for (Stat s : Stat.values()) {
                     if (s.abbrev().equals(abbrev)) {
                         ordered.add(s);
@@ -123,6 +123,15 @@ public class AppConfig {
             if (!seen.contains(s)) ordered.add(s);
         }
         return ordered.toArray(new Stat[0]);
+    }
+
+    /**
+     * Extracts the stat abbreviation from an overview column-ID of the form {@code "stat-<abbrev>"}.
+     * Returns {@code null} for non-stat column IDs.
+     */
+    static String statAbbrevFromColumnId(String colId) {
+        if (colId != null && colId.startsWith("stat-")) return colId.substring(5);
+        return null;
     }
 
     /** For tests only — resets the singleton so the next getInstance() starts fresh. */

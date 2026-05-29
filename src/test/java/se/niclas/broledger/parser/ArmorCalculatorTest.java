@@ -93,4 +93,75 @@ class ArmorCalculatorTest {
         equipWeapon(b, 30, 50, 8);
         assertEquals("30 – 50", ArmorCalculator.weaponDamageRange(b));
     }
+
+    // ---- pure helpers (package-private) ----
+
+    @Test
+    void hasStats_nullSlot() {
+        assertFalse(ArmorCalculator.hasStats(null));
+    }
+
+    @Test
+    void hasStats_emptySlot() {
+        InventorySlot s = InventorySlot.empty(0);
+        assertFalse(ArmorCalculator.hasStats(s));
+    }
+
+    @Test
+    void hasStats_slotWithoutStats() {
+        InventorySlot s = InventorySlot.empty(0);
+        s.empty = false;
+        assertFalse(ArmorCalculator.hasStats(s));
+    }
+
+    @Test
+    void hasStats_slotWithStats() {
+        InventorySlot s = InventorySlot.empty(0);
+        s.empty = false;
+        s.stats = new ItemStats();
+        assertTrue(ArmorCalculator.hasStats(s));
+    }
+
+    @Test
+    void isUsableSlot_null() {
+        assertFalse(ArmorCalculator.isUsableSlot(null));
+    }
+
+    @Test
+    void isUsableSlot_emptySlot() {
+        assertFalse(ArmorCalculator.isUsableSlot(InventorySlot.empty(0)));
+    }
+
+    @Test
+    void isUsableSlot_nonEmpty() {
+        InventorySlot s = InventorySlot.empty(0);
+        s.empty = false;
+        assertTrue(ArmorCalculator.isUsableSlot(s));
+    }
+
+    @Test
+    void hasNoDamage_trueWhenBothZero() {
+        ItemStats s = new ItemStats();
+        s.damageMin = 0;
+        s.damageMax = 0;
+        assertTrue(ArmorCalculator.hasNoDamage(s));
+    }
+
+    @Test
+    void hasNoDamage_falseWhenMinNonZero() {
+        ItemStats s = new ItemStats();
+        s.damageMin = 5;
+        s.damageMax = 0;
+        assertFalse(ArmorCalculator.hasNoDamage(s));
+    }
+
+    @Test
+    void formatDamageRange_dashWhenBothZero() {
+        assertEquals("—", ArmorCalculator.formatDamageRange(0, 0));
+    }
+
+    @Test
+    void formatDamageRange_rangeString() {
+        assertEquals("15 – 25", ArmorCalculator.formatDamageRange(15, 25));
+    }
 }

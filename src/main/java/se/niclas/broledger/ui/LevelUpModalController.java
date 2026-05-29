@@ -57,7 +57,7 @@ public class LevelUpModalController implements Initializable {
                     + (consumed != null ? "  (" + consumed + " planned consumed)" : "");
             Label statLine = new Label(text);
             statLine.getStyleClass().add("stat-label");
-            if (consumed != null && consumed < ev.levelsAssigned()) {
+            if (OverviewCalc.isPartiallyConsumed(consumed, ev.levelsAssigned())) {
                 statLine.setStyle("-fx-text-fill: #c87820;");
             }
             card.getChildren().add(statLine);
@@ -72,9 +72,7 @@ public class LevelUpModalController implements Initializable {
             }
         }
 
-        String statusText = ev.adjusted()
-                ? "Planned increases adjusted ✓"
-                : "No planned increases to adjust";
+        String statusText = OverviewCalc.levelUpStatusText(ev.post11(), ev.adjusted());
         Label statusLabel = new Label(statusText);
         statusLabel.getStyleClass().add("stat-label");
         if (ev.adjusted()) statusLabel.setStyle("-fx-text-fill: #78c87a;");

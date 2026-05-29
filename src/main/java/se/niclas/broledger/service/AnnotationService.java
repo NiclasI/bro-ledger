@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -201,6 +202,8 @@ public class AnnotationService {
 
     // ---- level-up reconciliation -------------------------------------------
 
+    private static final String GIFTED_PERK_ID = "9899E380";
+
     public record LevelUpEvent(
             String name,
             boolean adjusted,
@@ -208,8 +211,16 @@ public class AnnotationService {
             Map<Stat, Integer> statDeltas,
             List<Stat> adjustedStats,
             Map<Stat, Integer> consumedIncreases,
-            List<String> addedPerkIds
+            List<String> addedPerkIds,
+            boolean post11
     ) {}
+
+    record Reconciliation(
+            List<Stat> adjustedStats,
+            Map<Stat, Integer> consumedIncreases,
+            int[] updatedStatIncreases,
+            int[] updatedPost11Increases,
+            boolean changed) {}
 
     /**
      * Compares old vs new brother lists after a save reload and reduces
@@ -218,97 +229,161 @@ public class AnnotationService {
      */
     public List<LevelUpEvent> reconcileOnReload(List<Brother> oldList, List<Brother> newList) {
         List<LevelUpEvent> events = new ArrayList<>();
-
         log.fine("reconcileOnReload: checking " + newList.size() + " brothers against " + oldList.size() + " old");
-
         for (Brother nb : newList) {
             if (nb.fingerprint == null) {
                 log.fine("  skip [" + nb.name + "]: no fingerprint");
                 continue;
             }
-
-            Brother ob = oldList.stream()
-                    .filter(b -> nb.fingerprint.equals(b.fingerprint))
-                    .findFirst().orElse(null);
-
+            Brother ob = findMatch(oldList, nb.fingerprint);
             if (ob == null) {
                 log.fine("  skip [" + nb.name + "]: no match in old list (new brother?)");
                 continue;
             }
-
             log.fine("  [" + nb.name + "] old.levelPoints=" + ob.levelPoints + "  new.levelPoints=" + nb.levelPoints);
+            LevelUpEvent e = reconcileBrother(ob, nb);
+            if (e != null) events.add(e);
+        }
+        log.fine("reconcileOnReload: done — " + events.size() + " level-up event(s)");
+        return events;
+    }
 
-            if (nb.levelPoints >= ob.levelPoints) {
-                log.fine("  [" + nb.name + "]: levelPoints did not decrease — no level assigned, skipping");
-                continue;
-            }
+    private LevelUpEvent reconcileBrother(Brother ob, Brother nb) {
+        List<String> addedPerkIds = addedPerks(ob, nb);
+        if (!addedPerkIds.isEmpty()) {
+            log.fine("  [" + nb.name + "]: " + addedPerkIds.size() + " perk(s) added: " + addedPerkIds);
+        }
 
+        boolean levelPointsDecreased = nb.levelPoints < ob.levelPoints;
+        boolean giftedSelected       = addedPerkIds.contains(GIFTED_PERK_ID);
+
+        if (!levelPointsDecreased && addedPerkIds.isEmpty()) {
+            log.fine("  [" + nb.name + "]: no level assigned and no perks added — skipping");
+            return null;
+        }
+
+        if (levelPointsDecreased) {
             log.fine("  [" + nb.name + "]: " + (ob.levelPoints - nb.levelPoints) + " level(s) assigned in-game");
+        }
+        if (giftedSelected) {
+            log.fine("  [" + nb.name + "]: Gifted bonus round — treating as extra level for reconciliation");
+        }
 
-            int levelsAssigned = ob.levelPoints - nb.levelPoints;
+        int levels               = levelsAssigned(ob, nb, giftedSelected);
+        BrotherAnnotation a      = get(nb.fingerprint);
+        Map<Stat, Integer> deltas = statDeltas(ob, nb);
+        boolean post11            = levelPointsDecreased && isPost11Reconcile(ob, nb);
+        Reconciliation r;
 
-            BrotherAnnotation a = get(nb.fingerprint);
-            Map<Stat, Integer> statDeltasLocal        = new EnumMap<>(Stat.class);
-            List<Stat>         adjustedStatsLocal     = new ArrayList<>();
-            Map<Stat, Integer> consumedIncreasesLocal = new EnumMap<>(Stat.class);
-
-            List<String> addedPerkIdsLocal = nb.perkIds.stream()
-                    .filter(id -> !ob.perkIds.contains(id))
-                    .toList();
-            if (!addedPerkIdsLocal.isEmpty()) {
-                log.fine("  [" + nb.name + "]: " + addedPerkIdsLocal.size() + " perk(s) added: " + addedPerkIdsLocal);
+        if (post11) {
+            r = reconcilePost11(a, deltas);
+            if (r.changed()) {
+                log.fine("  [" + nb.name + "]: post-lv11 increases recorded: " + deltas);
+                setPost11Increases(nb.fingerprint, r.updatedPost11Increases());
+            } else {
+                log.fine("  [" + nb.name + "]: post-lv11 level-up but no stat deltas detected");
             }
-
-            for (Stat s : Stat.values()) {
-                int ord = s.ordinal();
-                int si  = s.statIndex();
-
-                if (si >= nb.stats.length || si >= ob.stats.length) continue;
-
-                int statDelta = nb.stats[si] - ob.stats[si];
-                if (statDelta > 0) statDeltasLocal.put(s, statDelta);
-
-                if (a.statIncreases == null) continue;
-                int planned = ord < a.statIncreases.length ? a.statIncreases[ord] : 0;
-
-                log.fine("    " + s.displayName() + ": statDelta=" + statDelta + "  planned=" + planned);
-
-                if (statDelta <= 0 || planned <= 0) continue;
-
-                int stars = (si < nb.stars.length) ? nb.stars[s.starIndex()] : 0;
-                StatPotentialCalculator.Range range = StatPotentialCalculator.rangeForStars(si, stars);
-                int maxPerRoll = (range != null) ? range.max() : statDelta;
-                int raisesLowerBound = (int) Math.ceil((double) statDelta / maxPerRoll);
-                int toConsume = Math.min(raisesLowerBound, planned);
-
-                log.fine("    -> consuming " + toConsume + " planned increase(s): " + planned + " -> " + (planned - toConsume));
-                a.statIncreases[ord] = planned - toConsume;
-                consumedIncreasesLocal.put(s, toConsume);
-                adjustedStatsLocal.add(s);
-            }
-
+        } else if (levelPointsDecreased || giftedSelected) {
+            r = consumePlannedIncreases(a, nb, deltas);
             if (a.statIncreases == null) {
                 log.fine("  [" + nb.name + "]: no planned statIncreases — recording level-up without adjustment");
-            } else if (!adjustedStatsLocal.isEmpty()) {
+            } else if (r.changed()) {
                 log.fine("  [" + nb.name + "]: saving updated statIncreases");
-                setStatIncreases(nb.fingerprint, a.statIncreases);
+                setStatIncreases(nb.fingerprint, r.updatedStatIncreases());
             } else {
                 log.fine("  [" + nb.name + "]: leveled up but no planned increases were affected");
             }
-
-            events.add(new LevelUpEvent(
-                    nb.name,
-                    !adjustedStatsLocal.isEmpty(),
-                    levelsAssigned,
-                    Collections.unmodifiableMap(statDeltasLocal),
-                    Collections.unmodifiableList(adjustedStatsLocal),
-                    Collections.unmodifiableMap(consumedIncreasesLocal),
-                    Collections.unmodifiableList(addedPerkIdsLocal)
-            ));
+        } else {
+            r = new Reconciliation(List.of(), Map.of(), null, null, false);
         }
 
-        log.fine("reconcileOnReload: done — " + events.size() + " level-up event(s)");
-        return events;
+        return new LevelUpEvent(
+                nb.name,
+                r.changed(),
+                levels,
+                Collections.unmodifiableMap(deltas),
+                r.adjustedStats(),
+                r.consumedIncreases(),
+                Collections.unmodifiableList(addedPerkIds),
+                post11
+        );
+    }
+
+    // ---- static reconciliation helpers -------------------------------------
+
+    static Map<Stat, Integer> statDeltas(Brother ob, Brother nb) {
+        Map<Stat, Integer> deltas = new EnumMap<>(Stat.class);
+        for (Stat s : Stat.values()) {
+            int si = s.statIndex();
+            if (si >= nb.stats.length || si >= ob.stats.length) continue;
+            int d = nb.stats[si] - ob.stats[si];
+            if (d > 0) deltas.put(s, d);
+        }
+        return deltas;
+    }
+
+    static int raisesLowerBound(int statDelta, int statIndex, int stars) {
+        StatPotentialCalculator.Range range = StatPotentialCalculator.rangeForStars(statIndex, stars);
+        int maxPerRoll = (range != null) ? range.max() : statDelta;
+        return (int) Math.ceil((double) statDelta / maxPerRoll);
+    }
+
+    static List<String> addedPerks(Brother ob, Brother nb) {
+        return nb.perkIds.stream().filter(id -> !ob.perkIds.contains(id)).toList();
+    }
+
+    static boolean isPost11Reconcile(Brother ob, Brother nb) {
+        return ob.levelTotal >= 11 && nb.levelTotal > 11;
+    }
+
+    static Brother findMatch(List<Brother> oldList, String fingerprint) {
+        return oldList.stream()
+                .filter(b -> fingerprint.equals(b.fingerprint))
+                .findFirst().orElse(null);
+    }
+
+    static int levelsAssigned(Brother ob, Brother nb, boolean gifted) {
+        int normal = Math.max(0, ob.levelPoints - nb.levelPoints);
+        return normal + (gifted ? 1 : 0);
+    }
+
+    static Reconciliation reconcilePost11(BrotherAnnotation a, Map<Stat, Integer> deltas) {
+        if (deltas.isEmpty()) return new Reconciliation(List.of(), Map.of(), null, null, false);
+        int[] post11 = a.post11Increases == null
+                ? new int[Stat.values().length]
+                : Arrays.copyOf(a.post11Increases, Stat.values().length);
+        for (Map.Entry<Stat, Integer> entry : deltas.entrySet()) {
+            post11[entry.getKey().ordinal()] += entry.getValue();
+        }
+        return new Reconciliation(List.of(), Map.of(), null, post11, true);
+    }
+
+    static Reconciliation consumePlannedIncreases(BrotherAnnotation a, Brother nb, Map<Stat, Integer> deltas) {
+        if (a.statIncreases == null) return new Reconciliation(List.of(), Map.of(), null, null, false);
+        int[] statIncreases = Arrays.copyOf(a.statIncreases, a.statIncreases.length);
+        List<Stat> adjustedStats = new ArrayList<>();
+        Map<Stat, Integer> consumedIncreases = new EnumMap<>(Stat.class);
+        for (Map.Entry<Stat, Integer> entry : deltas.entrySet()) {
+            Stat s       = entry.getKey();
+            int ord      = s.ordinal();
+            int si       = s.statIndex();
+            int delta    = entry.getValue();
+            int planned  = ord < statIncreases.length ? statIncreases[ord] : 0;
+            if (planned <= 0) continue;
+            int stars    = (si < nb.stars.length) ? nb.stars[s.starIndex()] : 0;
+            int toConsume = Math.min(raisesLowerBound(delta, si, stars), planned);
+            statIncreases[ord] = planned - toConsume;
+            consumedIncreases.put(s, toConsume);
+            adjustedStats.add(s);
+        }
+        if (adjustedStats.isEmpty()) return new Reconciliation(List.of(), Map.of(), null, null, false);
+        return new Reconciliation(
+                Collections.unmodifiableList(adjustedStats),
+                Collections.unmodifiableMap(consumedIncreases),
+                statIncreases,
+                null,
+                true
+        );
     }
 
     // ---- utility -----------------------------------------------------------

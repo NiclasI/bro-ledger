@@ -344,6 +344,143 @@ class AnnotationServiceTest {
     }
 
     @Test
+    void reconcile_post11RecordsStatDeltasInPost11Increases() {
+        int[] statsOld = new int[8];
+        int[] statsNew = new int[8];
+        statsOld[Stat.HEALTH.statIndex()]      = 80;
+        statsNew[Stat.HEALTH.statIndex()]      = 81; // +1
+        statsOld[Stat.MELEE_SKILL.statIndex()] = 70;
+        statsNew[Stat.MELEE_SKILL.statIndex()] = 71; // +1
+        statsOld[Stat.RESOLVE.statIndex()]     = 55;
+        statsNew[Stat.RESOLVE.statIndex()]     = 56; // +1
+
+        Brother ob = makeBrother("Q1", "Gunnar", 1, statsOld, new int[8]);
+        ob.levelTotal = 12;
+        Brother nb = makeBrother("Q1", "Gunnar", 0, statsNew, new int[8]);
+        nb.levelTotal = 12;
+
+        List<LevelUpEvent> events = service.reconcileOnReload(List.of(ob), List.of(nb));
+
+        assertEquals(1, events.size());
+        LevelUpEvent e = events.get(0);
+        assertTrue(e.post11());
+        assertTrue(e.adjusted());
+        assertEquals(1, e.levelsAssigned());
+        assertTrue(e.consumedIncreases().isEmpty());  // no planned increases consumed
+        assertEquals(1, e.statDeltas().get(Stat.HEALTH));
+        assertEquals(1, e.statDeltas().get(Stat.MELEE_SKILL));
+        assertEquals(1, e.statDeltas().get(Stat.RESOLVE));
+
+        int[] post11 = service.get("Q1").post11Increases;
+        assertNotNull(post11);
+        assertEquals(1, post11[Stat.HEALTH.ordinal()]);
+        assertEquals(1, post11[Stat.MELEE_SKILL.ordinal()]);
+        assertEquals(1, post11[Stat.RESOLVE.ordinal()]);
+        assertNull(service.get("Q1").statIncreases);  // planned increases untouched
+    }
+
+    @Test
+    void reconcile_mixedLevelCrossingUsesPreEleven() {
+        // Brother goes from level 10 to 12, crossing the boundary
+        int[] statsOld = new int[8];
+        int[] statsNew = new int[8];
+        statsOld[Stat.MELEE_SKILL.statIndex()] = 60;
+        statsNew[Stat.MELEE_SKILL.statIndex()] = 62; // combined delta from multiple levels
+
+        Brother ob = makeBrother("Q2", "Sigreid", 2, statsOld, new int[8]);
+        ob.levelTotal = 10;
+        Brother nb = makeBrother("Q2", "Sigreid", 0, statsNew, new int[8]);
+        nb.levelTotal = 12;
+
+        int[] planned = new int[Stat.values().length];
+        planned[Stat.MELEE_SKILL.ordinal()] = 2;
+        service.setStatIncreases("Q2", planned);
+
+        List<LevelUpEvent> events = service.reconcileOnReload(List.of(ob), List.of(nb));
+
+        assertEquals(1, events.size());
+        LevelUpEvent e = events.get(0);
+        assertFalse(e.post11());          // treated as pre-11 (let user handle fallout)
+        assertTrue(e.adjusted());
+        assertNull(service.get("Q2").post11Increases);  // post11 untouched
+    }
+
+    @Test
+    void reconcile_emitsEventForPerkOnlyChange() {
+        int[] stats = new int[8];
+
+        Brother ob = makeBrother("P3", "Sigrid", 0, stats, new int[8]);
+        ob.perkIds.add("DDDD0004");
+
+        Brother nb = makeBrother("P3", "Sigrid", 0, stats.clone(), new int[8]);
+        nb.perkIds.add("DDDD0004");
+        nb.perkIds.add("EEEE0005"); // perk selected separately, no pending stat level-ups
+
+        List<LevelUpEvent> events = service.reconcileOnReload(List.of(ob), List.of(nb));
+
+        assertEquals(1, events.size());
+        LevelUpEvent e = events.get(0);
+        assertEquals(List.of("EEEE0005"), e.addedPerkIds());
+        assertEquals(0, e.levelsAssigned());
+        assertTrue(e.statDeltas().isEmpty());
+        assertFalse(e.adjusted());
+    }
+
+    @Test
+    void reconcile_giftedPerkReconcilesStatDeltasWithoutLevelPointsChange() {
+        int[] statsOld = new int[8];
+        int[] statsNew = new int[8];
+        statsOld[Stat.MELEE_SKILL.statIndex()] = 50;
+        statsNew[Stat.MELEE_SKILL.statIndex()] = 52; // +2 from Gifted bonus
+
+        Brother ob = makeBrother("G1", "Oda", 0, statsOld, new int[8]);
+        Brother nb = makeBrother("G1", "Oda", 0, statsNew, new int[8]);
+        nb.perkIds.add("9899E380"); // Gifted
+
+        int[] planned = new int[Stat.values().length];
+        planned[Stat.MELEE_SKILL.ordinal()] = 2;
+        service.setStatIncreases("G1", planned);
+
+        List<LevelUpEvent> events = service.reconcileOnReload(List.of(ob), List.of(nb));
+
+        assertEquals(1, events.size());
+        LevelUpEvent e = events.get(0);
+        assertTrue(e.adjusted());
+        assertEquals(1, e.levelsAssigned()); // Gifted counts as 1 round
+        assertTrue(e.adjustedStats().contains(Stat.MELEE_SKILL));
+        assertEquals(List.of("9899E380"), e.addedPerkIds());
+        // delta=2 at 0★ (max 3/roll): ceil(2/3)=1 raise proved → consumes 1, leaves 1
+        assertEquals(1, service.get("G1").statIncreases[Stat.MELEE_SKILL.ordinal()]);
+    }
+
+    @Test
+    void reconcile_giftedCombinedWithNormalLevelUp() {
+        int[] statsOld = new int[8];
+        int[] statsNew = new int[8];
+        statsOld[Stat.HEALTH.statIndex()]      = 60;
+        statsNew[Stat.HEALTH.statIndex()]      = 63; // +3 combined (e.g. +1 normal + +2 Gifted)
+        statsOld[Stat.MELEE_SKILL.statIndex()] = 50;
+        statsNew[Stat.MELEE_SKILL.statIndex()] = 51; // +1 normal
+
+        Brother ob = makeBrother("G2", "Brunhilde", 1, statsOld, new int[8]);
+        Brother nb = makeBrother("G2", "Brunhilde", 0, statsNew, new int[8]);
+        nb.perkIds.add("9899E380"); // Gifted selected alongside the level-up
+
+        int[] planned = new int[Stat.values().length];
+        planned[Stat.HEALTH.ordinal()]      = 2;
+        planned[Stat.MELEE_SKILL.ordinal()] = 1;
+        service.setStatIncreases("G2", planned);
+
+        List<LevelUpEvent> events = service.reconcileOnReload(List.of(ob), List.of(nb));
+
+        assertEquals(1, events.size());
+        LevelUpEvent e = events.get(0);
+        assertTrue(e.adjusted());
+        assertEquals(2, e.levelsAssigned()); // 1 normal level + 1 Gifted
+        assertEquals(List.of("9899E380"), e.addedPerkIds());
+    }
+
+    @Test
     void reconcile_emptyAddedPerksWhenNoneAdded() {
         int[] stats = new int[8];
 

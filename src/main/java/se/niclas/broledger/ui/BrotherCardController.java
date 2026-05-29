@@ -31,6 +31,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -376,52 +377,22 @@ public class BrotherCardController implements Initializable {
             perksPane.getChildren().setAll(originalPerkOrder);
             return;
         }
-        List<javafx.scene.Node> sorted = new ArrayList<>(originalPerkOrder);
-        if (perkSortMode == PerkSortMode.TIER) {
-            sorted.sort((a, b) -> {
-                String hexA = ((String) a.getUserData()).substring(5);
-                String hexB = ((String) b.getUserData()).substring(5);
-                int ta = tierOf(hexA);
-                int tb = tierOf(hexB);
-                if (ta != tb) return Integer.compare(ta, tb);
-                return String.CASE_INSENSITIVE_ORDER.compare(
-                        ctx.dict().getName(hexA), ctx.dict().getName(hexB));
-            });
-        } else {
-            Map<String, Long> counts = allBrothers.stream()
-                    .flatMap(br -> br.perkIds.stream())
-                    .collect(Collectors.groupingBy(String::toUpperCase, Collectors.counting()));
-            if (perkSortMode == PerkSortMode.COMMONALITY) {
-                sorted.sort((a, b) -> {
-                    String hexA = ((String) a.getUserData()).substring(5);
-                    String hexB = ((String) b.getUserData()).substring(5);
-                    long cA = counts.getOrDefault(hexA, 0L);
-                    long cB = counts.getOrDefault(hexB, 0L);
-                    if (cA != cB) return Long.compare(cB, cA);
-                    return String.CASE_INSENSITIVE_ORDER.compare(
-                            ctx.dict().getName(hexA), ctx.dict().getName(hexB));
-                });
-            } else { // TIER_THEN_COMMON
-                sorted.sort((a, b) -> {
-                    String hexA = ((String) a.getUserData()).substring(5);
-                    String hexB = ((String) b.getUserData()).substring(5);
-                    int ta = tierOf(hexA);
-                    int tb = tierOf(hexB);
-                    if (ta != tb) return Integer.compare(ta, tb);
-                    long cA = counts.getOrDefault(hexA, 0L);
-                    long cB = counts.getOrDefault(hexB, 0L);
-                    if (cA != cB) return Long.compare(cB, cA);
-                    return String.CASE_INSENSITIVE_ORDER.compare(
-                            ctx.dict().getName(hexA), ctx.dict().getName(hexB));
-                });
-            }
-        }
-        perksPane.getChildren().setAll(sorted);
-    }
+        Map<String, Long> counts = perkSortMode == PerkSortMode.TIER
+                ? java.util.Map.of()
+                : allBrothers.stream()
+                        .flatMap(br -> br.perkIds.stream())
+                        .collect(Collectors.groupingBy(String::toUpperCase, Collectors.counting()));
 
-    private int tierOf(String hexId) {
-        Integer t = ctx.statModifier().getTier(hexId);
-        return t != null ? t : Integer.MAX_VALUE;
+        Comparator<String> hexComp = OverviewCalc.perkComparator(
+                perkSortMode,
+                id -> OverviewCalc.tierOrMax(ctx.statModifier().getTier(id)),
+                id -> counts.getOrDefault(id.toUpperCase(), 0L),
+                ctx.dict()::getName);
+
+        List<javafx.scene.Node> sorted = new ArrayList<>(originalPerkOrder);
+        sorted.sort(Comparator.comparing(
+                node -> ((String) node.getUserData()).substring(5), hexComp));
+        perksPane.getChildren().setAll(sorted);
     }
 
     // ---- per-brother updates -----------------------------------------------
@@ -433,8 +404,8 @@ public class BrotherCardController implements Initializable {
             DictionaryEntry entry = ctx.dict().get(hexId);
             String type = entry != null ? entry.type : "";
 
-            if ("perk".equals(type)) continue;
-            String name = ctx.dict().getName(hexId);
+            if (entry == null || "perk".equals(type) || "internal".equals(type)) continue;
+            String name = entry.name;
             if (name == null || BrotherOverviewPane.TRAIT_NAME_BLOCKLIST.contains(name)) continue;
 
             ImageView iv = new ImageView(loadHexImage(hexId));
@@ -503,14 +474,12 @@ public class BrotherCardController implements Initializable {
         if (b == null || b.fingerprint == null) return;
 
         if (b.levelTotal > 11) {
-            int postLevels = b.levelTotal - 11;
             int[] post11 = ctx.annotation().get(b.fingerprint).post11Increases;
             post11 = post11 == null ? new int[STAT_ROWS.length] : Arrays.copyOf(post11, STAT_ROWS.length);
             int current = post11[canonIdx];
-            int total   = Arrays.stream(post11).sum();
-            int budget  = 3 * postLevels - total;
-            if (delta > 0 && (current >= postLevels || budget <= 0)) return;
-            if (delta < 0 && current <= 0) return;
+            int cap     = b.levelTotal - 11;
+            int free    = 3 * cap - OverviewCalc.sumOrZero(post11);
+            if (!OverviewCalc.canApplyIncrease(delta, current, cap, free)) return;
             post11[canonIdx] = current + delta;
             ctx.annotation().setPost11Increases(b.fingerprint, post11);
         } else {
@@ -519,10 +488,8 @@ public class BrotherCardController implements Initializable {
             int[] increases = ctx.annotation().get(b.fingerprint).statIncreases;
             increases = increases == null ? new int[STAT_ROWS.length] : Arrays.copyOf(increases, STAT_ROWS.length);
             int current = increases[canonIdx];
-            int total   = Arrays.stream(increases).sum();
-            int budget  = 3 * remaining - total;
-            if (delta > 0 && (current >= remaining || budget <= 0)) return;
-            if (delta < 0 && current <= 0) return;
+            int free    = 3 * remaining - OverviewCalc.sumOrZero(increases);
+            if (!OverviewCalc.canApplyIncrease(delta, current, remaining, free)) return;
             increases[canonIdx] = current + delta;
             ctx.annotation().setStatIncreases(b.fingerprint, increases);
         }
@@ -533,12 +500,6 @@ public class BrotherCardController implements Initializable {
         Brother b = currentBrother;
         if (b == null) return;
 
-        boolean isPost11   = b.levelTotal > 11;
-        int remaining      = isPost11 ? 0 : ExpectedStatsCalculator.remainingLevels(b);
-        int postLevels     = isPost11 ? (b.levelTotal - 11) : 0;
-        int cap            = isPost11 ? postLevels : remaining;
-        int totalBudgetMax = 3 * cap;
-
         int[] increases = b.fingerprint != null
                 ? ctx.annotation().get(b.fingerprint).statIncreases : null;
         if (increases == null) increases = new int[STAT_ROWS.length];
@@ -547,25 +508,27 @@ public class BrotherCardController implements Initializable {
                 ? ctx.annotation().get(b.fingerprint).post11Increases : null;
         if (post11inc == null) post11inc = new int[STAT_ROWS.length];
 
-        int[] activeArr = isPost11 ? post11inc : increases;
-        int total = Arrays.stream(activeArr).sum();
-        int budget = totalBudgetMax - total;
+        OverviewCalc.LevelBudget lb = OverviewCalc.levelBudget(
+                b.levelTotal, ExpectedStatsCalculator.remainingLevels(b),
+                increases, post11inc);
+        int cap   = lb.cap();
+        int total = lb.used();
+        int budget = lb.free();
 
         // Budget label: "-X/-Y" (grey/red) for post-11, "X/Y" (green/grey/red) for pre-11
         increasesRemainingLabel.getStyleClass().removeAll(
                 "increases-remaining-green", "increases-remaining-red", "increases-remaining-post11");
         if (b.levelTotal == 11) {
             increasesRemainingLabel.setText("Lv 11");
-        } else if (isPost11) {
-            increasesRemainingLabel.setText("-" + total + "/-" + totalBudgetMax);
-            if (budget < 0)      increasesRemainingLabel.getStyleClass().add("increases-remaining-red");
-            else if (budget > 0) increasesRemainingLabel.getStyleClass().add("increases-remaining-green");
         } else {
-            String budgetText = total + " / " + totalBudgetMax;
-            if (b.levelPoints > 0) budgetText += "  (+" + b.levelPoints + " unassigned)";
+            String budgetText = OverviewCalc.formatBudgetLabel(lb.post11(), total, lb.totalBudget());
+            if (!lb.post11() && b.levelPoints > 0 && b.perkPoints == 0) budgetText += "  (" + b.levelPoints + " levels available)";
             increasesRemainingLabel.setText(budgetText);
-            if (budget < 0)      increasesRemainingLabel.getStyleClass().add("increases-remaining-red");
-            else if (budget > 0) increasesRemainingLabel.getStyleClass().add("increases-remaining-green");
+            OverviewCalc.BudgetState bs = OverviewCalc.budgetState(total, lb.totalBudget());
+            if (bs == OverviewCalc.BudgetState.OVER)
+                increasesRemainingLabel.getStyleClass().add("increases-remaining-red");
+            else if (bs == OverviewCalc.BudgetState.UNDER)
+                increasesRemainingLabel.getStyleClass().add("increases-remaining-green");
         }
 
         ExpectedStatsCalculator.Mode mode =
@@ -577,7 +540,7 @@ public class BrotherCardController implements Initializable {
             Label expLbl = entry.getValue();
             Stat stat    = STAT_ROWS[canonIdx].stat();
 
-            int count = isPost11
+            int count = lb.post11()
                     ? (canonIdx < post11Snap.length ? post11Snap[canonIdx] : 0)
                     : (canonIdx < increases.length  ? increases[canonIdx]  : 0);
 
@@ -588,24 +551,19 @@ public class BrotherCardController implements Initializable {
             ExpectedStatsCalculator.Expected exp = (mode == ExpectedStatsCalculator.Mode.GREEDY)
                     ? expGreedy : expNaive;
 
-            if (exp.remainingLevels() == 0) {
-                expLbl.setText(String.valueOf(exp.finalExpected()));
-            } else if (exp.count() == 0) {
-                expLbl.setText("—");
-            } else {
-                expLbl.setText(String.valueOf(exp.finalExpected()));
-            }
+            expLbl.setText(OverviewCalc.expectedDisplay(exp));
             expLbl.setTooltip(TooltipFactory.forStatExpected(expNaive, expGreedy, total));
 
             if (increaseCountLabels.containsKey(canonIdx)) {
                 increaseCountLabels.get(canonIdx).setText(String.valueOf(count));
             }
-            boolean editorDisabled = cap == 0;
             if (incPlusBtns.containsKey(canonIdx)) {
-                incPlusBtns.get(canonIdx).setDisable(editorDisabled || count >= cap || budget <= 0);
+                incPlusBtns.get(canonIdx).setDisable(
+                        !OverviewCalc.canApplyIncrease(+1, count, cap, budget));
             }
             if (incMinusBtns.containsKey(canonIdx)) {
-                incMinusBtns.get(canonIdx).setDisable(count <= 0);
+                incMinusBtns.get(canonIdx).setDisable(
+                        !OverviewCalc.canApplyIncrease(-1, count, cap, budget));
             }
         }
 
@@ -618,27 +576,27 @@ public class BrotherCardController implements Initializable {
         target.getStyleClass().removeAll(
                 "stat-target-met", "stat-target-potential", "stat-target-unmet",
                 "stat-target-p2", "stat-target-p3");
-        int tgt = (role != null && role.targetStats != null && row < role.targetStats.length)
-                ? role.targetStats[row] : 0;
+        int tgt = OverviewCalc.priorityAt(role != null ? role.targetStats : null, row, 0);
         if (tgt <= 0) {
             target.setText("");
             return;
         }
         // Priority weight: P1 = bold (default), P2 = normal, P3 = light
-        int prio = (role.priority != null && row < role.priority.length) ? role.priority[row] : 2;
+        int prio = OverviewCalc.priorityAt(role != null ? role.priority : null, row, 2);
         if (prio == 2) target.getStyleClass().add("stat-target-p2");
         else if (prio == 3) target.getStyleClass().add("stat-target-p3");
 
         target.setText(String.valueOf(tgt));
         StatModifierService.Breakdown bd =
                 ctx.statModifier().compute(b, STAT_ROWS[row].stat());
-        if (bd.finalValue() >= tgt) {
-            target.getStyleClass().add("stat-target-met");
-        } else {
-            StatPotentialCalculator.Potential pot =
-                    StatPotentialCalculator.compute(b, STAT_ROWS[row].stat());
-            target.getStyleClass().add(pot.finalPotential() >= tgt
-                    ? "stat-target-potential" : "stat-target-unmet");
+        StatPotentialCalculator.Potential pot =
+                StatPotentialCalculator.compute(b, STAT_ROWS[row].stat());
+        OverviewCalc.TargetState ts = OverviewCalc.targetState(
+                bd.finalValue(), pot.finalPotential(), tgt);
+        switch (ts) {
+            case MET       -> target.getStyleClass().add("stat-target-met");
+            case REACHABLE -> target.getStyleClass().add("stat-target-potential");
+            case UNMET     -> target.getStyleClass().add("stat-target-unmet");
         }
     }
 

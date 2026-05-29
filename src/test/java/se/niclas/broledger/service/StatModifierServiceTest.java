@@ -157,4 +157,40 @@ class StatModifierServiceTest {
     void loadFromClasspath_doesNotThrow() {
         assertDoesNotThrow(() -> svc.loadFromClasspath());
     }
+
+    // ---- applyModifiers (pure helper) ----------------------------------------
+
+    @Test
+    void applyModifiers_noModifiers_returnsBase() {
+        assertEquals(60, StatModifierService.applyModifiers(60, 0, 0));
+    }
+
+    @Test
+    void applyModifiers_flatBonus() {
+        assertEquals(65, StatModifierService.applyModifiers(60, 5, 0));
+    }
+
+    @Test
+    void applyModifiers_percentage() {
+        // 60 * 1.1 = 66.0 → (int) 66
+        assertEquals(66, StatModifierService.applyModifiers(60, 0, 10));
+    }
+
+    @Test
+    void applyModifiers_flatThenPercent() {
+        // (60 + 5) * 1.1 = 71.5 → (int) 71
+        assertEquals(71, StatModifierService.applyModifiers(60, 5, 10));
+    }
+
+    @Test
+    void applyModifiers_truncatesDown() {
+        // 7 * 1.33 = 9.31 → (int) 9
+        assertEquals(9, StatModifierService.applyModifiers(7, 0, 33));
+    }
+
+    @Test
+    void applyModifiers_negativePercent() {
+        // 100 * 0.9 = 90
+        assertEquals(90, StatModifierService.applyModifiers(100, 0, -10));
+    }
 }

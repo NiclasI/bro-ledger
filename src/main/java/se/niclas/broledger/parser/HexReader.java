@@ -27,19 +27,21 @@ public class HexReader {
     }
 
     public void skip(int byteCount) {
-        cursor += byteCount * 2;
+        cursor += HexUtils.hexCharSpan(byteCount);
     }
 
     /** Read byteCount bytes as a raw uppercase hex string. */
     public String readHexBytes(int byteCount) {
-        String result = data.substring(cursor, cursor + byteCount * 2).toUpperCase();
-        cursor += byteCount * 2;
+        int span = HexUtils.hexCharSpan(byteCount);
+        String result = data.substring(cursor, cursor + span).toUpperCase();
+        cursor += span;
         return result;
     }
 
     /** Peek at absolute char offset without moving the cursor. */
     public String peekAt(int absoluteCharOffset, int byteCount) {
-        return data.substring(absoluteCharOffset, absoluteCharOffset + byteCount * 2).toUpperCase();
+        return data.substring(absoluteCharOffset,
+                absoluteCharOffset + HexUtils.hexCharSpan(byteCount)).toUpperCase();
     }
 
     public int readUInt8() {

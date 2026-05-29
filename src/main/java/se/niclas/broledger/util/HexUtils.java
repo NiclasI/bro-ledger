@@ -49,4 +49,27 @@ public final class HexUtils {
     public static int int8(String hex1byte) {
         return (byte) Integer.parseInt(hex1byte, 16);
     }
+
+    /** Converts bytes to a lowercase hex string (e.g. for use with save-file readers). */
+    public static String toHexLower(byte[] bytes) {
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Encodes a 16-bit unsigned int as a 4-char uppercase little-endian hex string.
+     * Low byte first: {@code uint16ToHexLE(1)} → {@code "0100"}.
+     * Inverse of {@link #uint16LE(String)}.
+     */
+    public static String uint16ToHexLE(int value) {
+        return String.format("%02X%02X", value & 0xFF, (value >> 8) & 0xFF);
+    }
+
+    /** Converts a byte count to the equivalent number of hex characters (byteCount × 2). */
+    public static int hexCharSpan(int byteCount) {
+        return byteCount * 2;
+    }
 }

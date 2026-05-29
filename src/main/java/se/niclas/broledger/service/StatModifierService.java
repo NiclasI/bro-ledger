@@ -103,8 +103,16 @@ public class StatModifierService {
             if (c.percentage() != null) sumPct  += c.percentage();
         }
 
-        int finalValue = (int) ((baseOverride + sumFlat) * (1 + sumPct / 100.0));
+        int finalValue = applyModifiers(baseOverride, sumFlat, sumPct);
         return new Breakdown(baseOverride, sumFlat, sumPct, finalValue, contributions);
+    }
+
+    /**
+     * Core stat modifier formula: flat bonuses applied first, then additive percentages, truncated to int.
+     * {@code (base + flatBonus) × (1 + sumPercent / 100)}
+     */
+    static int applyModifiers(int base, int flatBonus, int sumPercent) {
+        return (int) ((base + flatBonus) * (1 + sumPercent / 100.0));
     }
 
     private void accumulate(String hexId, String statKey, List<Contribution> out) {
