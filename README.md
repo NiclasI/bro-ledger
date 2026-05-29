@@ -117,33 +117,21 @@ The brother card supports side-by-side role comparison without leaving the card:
 - Java 25+
 - JavaFX 25 ([gluonhq.com/products/javafx](https://gluonhq.com/products/javafx))
 - Maven 3.9+ (the `.\mvnw` wrapper is included — no separate install needed)
-- Python 3 (for one-time asset extraction)
 
 ---
 
 ## Setup
 
-### 1. Extract game assets
-
-Run once against your Battle Brothers installation to populate the `game-art/` folder:
-
-```bash
-python tools/extract_and_map.py \
-  --dat "/path/to/Battle Brothers/data/data_001.dat" \
-  --out game-art \
-  --map tools/asset-map.json
-```
-
-This is required before the app will display portraits, item icons, and trait images. The `game-art/` folder is gitignored and must be populated locally.
-
-### 2. Run in development mode
+### 1. Run in development mode
 
 ```powershell
 .\mvnw javafx:run        # Windows
 ./mvnw javafx:run        # macOS / Linux
 ```
 
-On first launch, Bro Ledger will ask you to locate the `game-art/` folder if it cannot be detected automatically.
+On first launch, Bro Ledger shows a **Setup** dialog that extracts game assets directly from your Battle Brothers installation. Point it at `data/data_001.dat` inside your game folder, choose an output directory (defaults to `~/game-art`), and click **Extract**. This is required before the app will display portraits, item icons, and trait images. The `game-art/` folder is gitignored and populated by the in-app extractor.
+
+If you have already extracted assets previously, click **Use existing folder** in the Setup dialog to point the app at the existing directory without re-extracting.
 
 ### 3. Build a standalone JAR
 

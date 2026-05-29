@@ -55,10 +55,8 @@
             <Label fx:id="progressLabel" text="" styleClass="stat-label"
                    visible="false" managed="false" wrapText="true"/>
 
-            <HBox alignment="CENTER_RIGHT">
-                <Button fx:id="extractBtn" text="Extract" onAction="#startExtract"
-                        styleClass="fancy-btn" disable="true"/>
-            </HBox>
+            <Button fx:id="extractBtn" text="Extract" onAction="#startExtract"
+                    styleClass="fancy-btn" disable="true" maxWidth="Infinity"/>
         </VBox>
 
         <Label text="— or —" styleClass="stat-label" maxWidth="Infinity"/>

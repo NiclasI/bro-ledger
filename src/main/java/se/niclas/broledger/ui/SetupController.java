@@ -5,7 +5,9 @@ import javafx.beans.value.ChangeListener;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
@@ -49,7 +51,7 @@ public class SetupController implements Initializable {
             s.setY(e.getScreenY() - dragOffsetY);
         });
 
-        outDirField.setText(System.getProperty("user.home") + "/game-art");
+        outDirField.setText(Path.of(System.getProperty("user.home"), "game-art").toString());
 
         ChangeListener<String> updateExtractBtn = (obs, old, val) ->
                 extractBtn.setDisable(
@@ -73,7 +75,28 @@ public class SetupController implements Initializable {
         DirectoryChooser chooser = new DirectoryChooser();
         chooser.setTitle("Select output folder");
         File dir = chooser.showDialog(titleBar.getScene().getWindow());
-        if (dir != null) outDirField.setText(dir.getAbsolutePath());
+        if (dir == null) return;
+
+        if (!dir.getName().equals("game-art")) {
+            ButtonType useSubfolder = new ButtonType("Create 'game-art' subfolder");
+            ButtonType useAsIs      = new ButtonType("Use selected folder");
+            Alert alert = new Alert(Alert.AlertType.NONE,
+                    "The selected folder is '" + dir.getName() + "'.\n\n" +
+                    "Create a 'game-art' subfolder inside it to keep extracted files organized?",
+                    useSubfolder, useAsIs);
+            alert.setTitle("Confirm output folder");
+            alert.setHeaderText(null);
+            alert.initOwner(titleBar.getScene().getWindow());
+            alert.showAndWait().ifPresent(bt -> {
+                if (bt == useSubfolder) {
+                    outDirField.setText(dir.toPath().resolve("game-art").toString());
+                } else {
+                    outDirField.setText(dir.getAbsolutePath());
+                }
+            });
+        } else {
+            outDirField.setText(dir.getAbsolutePath());
+        }
     }
 
     @FXML
