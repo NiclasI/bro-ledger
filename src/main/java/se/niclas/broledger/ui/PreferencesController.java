@@ -18,6 +18,10 @@ public class PreferencesController implements Initializable {
     @FXML private RadioButton naiveRadio;
     @FXML private RadioButton greedyRadio;
     @FXML private ToggleGroup modeGroup;
+    @FXML private RadioButton lvlModalRadio;
+    @FXML private RadioButton lvlAutoCloseRadio;
+    @FXML private RadioButton lvlOffRadio;
+    @FXML private ToggleGroup lvlModalGroup;
 
     private double dragOffsetX, dragOffsetY;
     private Runnable onChanged;
@@ -52,6 +56,27 @@ public class PreferencesController implements Initializable {
             }
             AppConfig.getInstance().save();
             if (onChanged != null) onChanged.run();
+        });
+
+        // Initialize level-up modal mode
+        String lvlMode = AppConfig.getInstance().levelUpModalMode;
+        if ("AUTO_CLOSE".equals(lvlMode)) {
+            lvlAutoCloseRadio.setSelected(true);
+        } else if ("OFF".equals(lvlMode)) {
+            lvlOffRadio.setSelected(true);
+        } else {
+            lvlModalRadio.setSelected(true);
+        }
+
+        lvlModalGroup.selectedToggleProperty().addListener((obs, old, selected) -> {
+            if (selected == lvlAutoCloseRadio) {
+                AppConfig.getInstance().levelUpModalMode = "AUTO_CLOSE";
+            } else if (selected == lvlOffRadio) {
+                AppConfig.getInstance().levelUpModalMode = "OFF";
+            } else {
+                AppConfig.getInstance().levelUpModalMode = "MODAL";
+            }
+            AppConfig.getInstance().save();
         });
     }
 

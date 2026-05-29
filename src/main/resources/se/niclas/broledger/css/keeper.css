@@ -833,3 +833,14 @@
 .btn-led.led-lit.led-red    { -fx-background-color: #e53935; -fx-opacity: 1; -fx-effect: dropshadow(gaussian, #e53935, 5, 0.6, 0, 0); }
 .btn-led.led-lit.led-green  { -fx-background-color: #43a047; -fx-opacity: 1; -fx-effect: dropshadow(gaussian, #43a047, 5, 0.6, 0, 0); }
 .btn-led.led-lit.led-yellow { -fx-background-color: #d69f23; -fx-opacity: 1; -fx-effect: dropshadow(gaussian, #d69f23, 5, 0.6, 0, 0); }
+
+/* ===== Level-up modal scroll pane ===== */
+
+.modal-scroll {
+    -fx-background-color: #1a1209;
+    -fx-background: #1a1209;
+}
+
+.modal-scroll > .viewport {
+    -fx-background-color: #1a1209;
+}

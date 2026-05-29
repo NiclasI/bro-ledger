@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox styleClass="app-frame" minWidth="400" minHeight="200" maxHeight="600"
+<VBox styleClass="app-frame" minWidth="400" minHeight="200"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="se.niclas.broledger.ui.LevelUpModalController">
 
@@ -18,7 +18,7 @@
         <Button text="✕" styleClass="window-btn,window-btn-close" onAction="#close" focusTraversable="false"/>
     </HBox>
 
-    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="modal-scroll">
         <VBox fx:id="eventsContainer" spacing="12">
             <padding><Insets top="16" right="20" bottom="8" left="20"/></padding>
         </VBox>

@@ -36,6 +36,8 @@ public class AppConfig {
     public List<String> roleOrder;
     /** Expected-stats calculation mode: "NAIVE" (default) or "GREEDY". */
     public String expectedStatsMode = "NAIVE";
+    /** Level-up modal behaviour: "MODAL" (default), "AUTO_CLOSE" (15 s), or "OFF". */
+    public String levelUpModalMode = "MODAL";
 
     private AppConfig() {}
 
@@ -62,7 +64,8 @@ public class AppConfig {
             this.windowY             = loaded.windowY;
             this.overviewColumnOrder = loaded.overviewColumnOrder;
             this.roleOrder           = loaded.roleOrder;
-            if (loaded.expectedStatsMode != null) this.expectedStatsMode = loaded.expectedStatsMode;
+            if (loaded.expectedStatsMode  != null) this.expectedStatsMode  = loaded.expectedStatsMode;
+            if (loaded.levelUpModalMode   != null) this.levelUpModalMode   = loaded.levelUpModalMode;
         } catch (Exception e) {
             log.warning("AppConfig: could not read config — " + e.getMessage());
         }

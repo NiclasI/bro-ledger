@@ -359,7 +359,7 @@ public class MainController implements Initializable {
         }
     }
 
-    private void startReloadCountdown(String note) {
+    private void startReloadCountdown(String note, Stage autoCloseStage) {
         if (reloadCountdown != null) reloadCountdown.stop();
         reloadSecondsElapsed = 0;
         String suffix = note != null ? " • " + note : "";
@@ -371,6 +371,7 @@ public class MainController implements Initializable {
             } else {
                 watchStatusLabel.setText("Watching");
                 reloadCountdown.stop();
+                if (autoCloseStage != null && autoCloseStage.isShowing()) autoCloseStage.close();
             }
         }));
         reloadCountdown.setCycleCount(15);
@@ -444,10 +445,14 @@ public class MainController implements Initializable {
             }
             if (showingOverview) showOverview();
             if (!events.isEmpty()) {
-                openLevelUpModal(events);
-                startReloadCountdown(events.size() + " level-up(s) detected");
+                String lvlMode = AppConfig.getInstance().levelUpModalMode;
+                Stage lvlStage = null;
+                if (!"OFF".equals(lvlMode)) {
+                    lvlStage = openLevelUpModal(events, "AUTO_CLOSE".equals(lvlMode));
+                }
+                startReloadCountdown(events.size() + " level-up(s) detected", lvlStage);
             } else {
-                startReloadCountdown(null);
+                startReloadCountdown(null, null);
             }
         });
         task.setOnFailed(e ->
@@ -601,25 +606,36 @@ public class MainController implements Initializable {
         }
     }
 
-    private void openLevelUpModal(List<LevelUpEvent> events) {
+    private Stage openLevelUpModal(List<LevelUpEvent> events, boolean autoClose) {
         try {
             URL fxml = getClass().getResource("/se/niclas/broledger/fxml/level-up-modal.fxml");
-            if (fxml == null) return;
+            if (fxml == null) return null;
             FXMLLoader loader = new FXMLLoader(fxml);
             Parent root = loader.load();
             LevelUpModalController ctrl = loader.getController();
             ctrl.setEvents(events);
+            javafx.stage.Window owner = centerPane.getScene().getWindow();
+            double maxH = owner.getHeight() * 0.9;
+            ((Region) root).setMaxHeight(maxH);
             Stage stage = new Stage();
             stage.initStyle(javafx.stage.StageStyle.UNDECORATED);
             stage.initModality(Modality.APPLICATION_MODAL);
-            stage.initOwner(centerPane.getScene().getWindow());
+            stage.initOwner(owner);
             Scene scene = new Scene(root);
             URL css = getClass().getResource("/se/niclas/broledger/css/keeper.css");
             if (css != null) scene.getStylesheets().add(css.toExternalForm());
             stage.setScene(scene);
-            stage.showAndWait();
+            stage.setMaxHeight(maxH);
+            if (autoClose) {
+                stage.show();
+                return stage;
+            } else {
+                stage.showAndWait();
+                return null;
+            }
         } catch (Exception e) {
             log.warning("Could not open level-up modal: " + e.getMessage());
+            return null;
         }
     }
 
