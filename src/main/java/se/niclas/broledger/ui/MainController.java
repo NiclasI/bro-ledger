@@ -42,7 +42,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import se.niclas.broledger.model.Brother;
 import se.niclas.broledger.model.DictionaryEntry;
 import se.niclas.broledger.parser.SaveParser;
@@ -360,7 +359,7 @@ public class MainController implements Initializable {
         }
     }
 
-    private void startReloadCountdown(String note) {
+    private void startReloadCountdown(String note, Stage autoCloseStage) {
         if (reloadCountdown != null) reloadCountdown.stop();
         reloadSecondsElapsed = 0;
         String suffix = note != null ? " • " + note : "";
@@ -372,6 +371,7 @@ public class MainController implements Initializable {
             } else {
                 watchStatusLabel.setText("Watching");
                 reloadCountdown.stop();
+                if (autoCloseStage != null && autoCloseStage.isShowing()) autoCloseStage.close();
             }
         }));
         reloadCountdown.setCycleCount(15);
@@ -445,16 +445,14 @@ public class MainController implements Initializable {
             }
             if (showingOverview) showOverview();
             if (!events.isEmpty()) {
-                String leveledNames = events.stream().map(LevelUpEvent::name).collect(Collectors.joining(", "));
-                String adjustedNames = events.stream().filter(LevelUpEvent::adjusted)
-                        .map(LevelUpEvent::name).collect(Collectors.joining(", "));
-                String msg = leveledNames + " leveled up."
-                        + (adjustedNames.isEmpty() ? "" : " " + adjustedNames + " has been adjusted successfully.");
-                log.fine("loadSaveQuiet status: " + msg);
-                setStatus(msg, false);
-                startReloadCountdown(events.size() + " level-up(s) detected");
+                String lvlMode = AppConfig.getInstance().levelUpModalMode;
+                Stage lvlStage = null;
+                if (!"OFF".equals(lvlMode)) {
+                    lvlStage = openLevelUpModal(events, "AUTO_CLOSE".equals(lvlMode));
+                }
+                startReloadCountdown(events.size() + " level-up(s) detected", lvlStage);
             } else {
-                startReloadCountdown(null);
+                startReloadCountdown(null, null);
             }
         });
         task.setOnFailed(e ->
@@ -605,6 +603,39 @@ public class MainController implements Initializable {
             stage.showAndWait();
         } catch (Exception e) {
             log.warning("Could not open role manager: " + e.getMessage());
+        }
+    }
+
+    private Stage openLevelUpModal(List<LevelUpEvent> events, boolean autoClose) {
+        try {
+            URL fxml = getClass().getResource("/se/niclas/broledger/fxml/level-up-modal.fxml");
+            if (fxml == null) return null;
+            FXMLLoader loader = new FXMLLoader(fxml);
+            Parent root = loader.load();
+            LevelUpModalController ctrl = loader.getController();
+            ctrl.setEvents(events);
+            javafx.stage.Window owner = centerPane.getScene().getWindow();
+            double maxH = owner.getHeight() * 0.9;
+            ((Region) root).setMaxHeight(maxH);
+            Stage stage = new Stage();
+            stage.initStyle(javafx.stage.StageStyle.UNDECORATED);
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initOwner(owner);
+            Scene scene = new Scene(root);
+            URL css = getClass().getResource("/se/niclas/broledger/css/keeper.css");
+            if (css != null) scene.getStylesheets().add(css.toExternalForm());
+            stage.setScene(scene);
+            stage.setMaxHeight(maxH);
+            if (autoClose) {
+                stage.show();
+                return stage;
+            } else {
+                stage.showAndWait();
+                return null;
+            }
+        } catch (Exception e) {
+            log.warning("Could not open level-up modal: " + e.getMessage());
+            return null;
         }
     }
 

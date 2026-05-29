@@ -135,4 +135,68 @@ class StatPotentialCalculatorTest {
         assertEquals(65, p.minBasePotential());
         assertEquals(65, p.maxBasePotential());
     }
+
+    // ---- new pure helpers --------------------------------------------------
+
+    @Test
+    void applyStars_zeroStars_identity() {
+        StatPotentialCalculator.Range base = new StatPotentialCalculator.Range(2, 4);
+        StatPotentialCalculator.Range r = StatPotentialCalculator.applyStars(base, 0);
+        assertEquals(2, r.min());
+        assertEquals(4, r.max());
+    }
+
+    @Test
+    void applyStars_oneStar_raisesMin() {
+        StatPotentialCalculator.Range base = new StatPotentialCalculator.Range(2, 4);
+        StatPotentialCalculator.Range r = StatPotentialCalculator.applyStars(base, 1);
+        assertEquals(3, r.min());
+        assertEquals(4, r.max());
+    }
+
+    @Test
+    void applyStars_threeStar_raisesMinAndMax() {
+        StatPotentialCalculator.Range base = new StatPotentialCalculator.Range(2, 4);
+        StatPotentialCalculator.Range r = StatPotentialCalculator.applyStars(base, 3);
+        assertEquals(4, r.min()); // +2
+        assertEquals(5, r.max()); // +1
+    }
+
+    @Test
+    void applyStars_clampsBelowZero() {
+        StatPotentialCalculator.Range base = new StatPotentialCalculator.Range(2, 4);
+        StatPotentialCalculator.Range r = StatPotentialCalculator.applyStars(base, -5);
+        assertEquals(2, r.min());
+        assertEquals(4, r.max());
+    }
+
+    @Test
+    void applyStars_clampsAboveThree() {
+        StatPotentialCalculator.Range base = new StatPotentialCalculator.Range(2, 4);
+        // clamped to 3
+        StatPotentialCalculator.Range r3 = StatPotentialCalculator.applyStars(base, 3);
+        StatPotentialCalculator.Range r9 = StatPotentialCalculator.applyStars(base, 9);
+        assertEquals(r3.min(), r9.min());
+        assertEquals(r3.max(), r9.max());
+    }
+
+    @Test
+    void projectBase_addsRemainingTimesRoll() {
+        assertEquals(60, StatPotentialCalculator.projectBase(50, 5, 2)); // 50+5*2=60
+        assertEquals(50, StatPotentialCalculator.projectBase(50, 0, 3)); // no levels left
+    }
+
+    @Test
+    void projectExpectedBase_roundsCorrectly() {
+        StatPotentialCalculator.Range r = new StatPotentialCalculator.Range(2, 4); // mean=3.0
+        // 50 + 5 * 3.0 = 65.0 → round → 65
+        assertEquals(65, StatPotentialCalculator.projectExpectedBase(50, 5, r));
+    }
+
+    @Test
+    void projectExpectedBase_matchesRangeForStars0Stars() {
+        // HEALTH 0★: range(2,4), mean=3. base=40, remaining=4 → round(40+12) = 52
+        StatPotentialCalculator.Range r = StatPotentialCalculator.rangeForStars(Stat.HEALTH.statIndex(), 0);
+        assertEquals(52, StatPotentialCalculator.projectExpectedBase(40, 4, r));
+    }
 }

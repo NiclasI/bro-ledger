@@ -94,11 +94,21 @@ Plan a brother's level-up path and see realistic projected final values:
 - Each stat row in the brother card has a **`[− count +]` increase editor** and an **Expected** column
 - A **remainder counter** tracks how many of the `3 × remainingLevels` total increases are unassigned
 - **Auto-assign by role**: fills P1 stats first (equal split, alphabetical tiebreaker if >3 P1 stats), then cascades leftover increases to P2, then P3
-- **Preferences** (toolbar button): switch between **Naive** mode (always available, updates live) and **Greedy** mode (optimal allocation, requires a fully-assigned brother; falls back to Naive if not complete)
+- **Preferences** (toolbar button): switch between **Naive** mode (always available, updates live) and **Greedy** mode (optimal allocation, requires a fully-assigned brother; falls back to Naive if not complete); also controls level-up modal behaviour (see above)
   - For Naive mode: Expected value = `ceil(currentBase + mean_gain × allottedCount)`, then trait/perk modifiers applied
   - For Greedy mode: Expected value is based on an exploratory algorithm that takes into account the fact that if two stats should be leveled, you'd generally pick the one with the higher roll for that level.
 
 Increases are persisted along with the other per save.
+
+### Level-up notification
+
+When the save file auto-refreshes and the app detects that a brother leveled up in-game, a **level-up summary modal** appears listing each brother who leveled, the stat deltas recorded, any perks added, and how many planned stat increases were consumed from the annotation. This keeps the planned allocation in sync without manual adjustment.
+
+The modal behaviour is configurable in **Preferences**:
+
+- **Modal** (default) — stays open until dismissed
+- **Auto-close** — closes automatically after 15 seconds
+- **Off** — suppresses the modal entirely
 
 ### Role Fit Comparison
 

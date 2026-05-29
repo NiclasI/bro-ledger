@@ -28,8 +28,7 @@ public class BrotherLocator {
     public static int countBrothers(String hex) {
         Matcher m = SIG.matcher(hex);
         if (!m.find()) return 0;
-        return Integer.parseInt(
-                hex.substring(m.start() - SIG_COUNT_BACK, m.start() - SIG_COUNT_BACK + 2), 16);
+        return parseBrotherCount(hex, m.start());
     }
 
     /**
@@ -40,8 +39,7 @@ public class BrotherLocator {
     public static List<Integer> findOffsets(String hex) {
         Matcher m = SIG.matcher(hex);
         if (!m.find()) return List.of();
-        int count = Integer.parseInt(
-                hex.substring(m.start() - SIG_COUNT_BACK, m.start() - SIG_COUNT_BACK + 2), 16);
+        int count = parseBrotherCount(hex, m.start());
         m.reset();
         List<Integer> offsets = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
@@ -49,5 +47,14 @@ public class BrotherLocator {
             offsets.add(m.start() + SIG_DATA_AHEAD);
         }
         return offsets;
+    }
+
+    /**
+     * Reads the 1-byte brother count that sits {@link #SIG_COUNT_BACK} hex-chars before
+     * the signature match start.
+     */
+    static int parseBrotherCount(String hex, int matchStart) {
+        return Integer.parseInt(
+                hex.substring(matchStart - SIG_COUNT_BACK, matchStart - SIG_COUNT_BACK + 2), 16);
     }
 }

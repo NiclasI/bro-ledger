@@ -37,6 +37,21 @@
             </HBox>
         </VBox>
 
+        <!-- Level-up modal -->
+        <VBox spacing="8" styleClass="card-section">
+            <Label text="Level-Up Modal" styleClass="section-header"/>
+            <Label text="Controls whether a summary is shown when a level-up is detected on save reload." styleClass="stat-label" wrapText="true"/>
+            <HBox spacing="16" alignment="CENTER_LEFT">
+                <RadioButton fx:id="lvlModalRadio" text="Modal" styleClass="role-radio">
+                    <toggleGroup><ToggleGroup fx:id="lvlModalGroup"/></toggleGroup>
+                </RadioButton>
+                <RadioButton fx:id="lvlAutoCloseRadio" text="Modal — auto-close after 15s" styleClass="role-radio"
+                             toggleGroup="$lvlModalGroup"/>
+                <RadioButton fx:id="lvlOffRadio" text="Off" styleClass="role-radio"
+                             toggleGroup="$lvlModalGroup"/>
+            </HBox>
+        </VBox>
+
         <Region VBox.vgrow="ALWAYS"/>
 
         <!-- Footer -->

@@ -6,6 +6,7 @@ import se.niclas.broledger.model.Role;
 import se.niclas.broledger.model.Stat;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -302,5 +303,100 @@ class ExpectedStatsCalculatorTest {
     void modeParse_greedy() {
         assertEquals(ExpectedStatsCalculator.Mode.GREEDY, ExpectedStatsCalculator.Mode.parse("GREEDY"));
         assertEquals(ExpectedStatsCalculator.Mode.GREEDY, ExpectedStatsCalculator.Mode.parse("greedy"));
+    }
+
+    // ---- new pure helpers --------------------------------------------------
+
+    @Test
+    void remainingLevels_pureOverload_matchesBrotherForm() {
+        assertEquals(ExpectedStatsCalculator.remainingLevels(brother(7, 2)),
+                     ExpectedStatsCalculator.remainingLevels(7, 2));
+        assertEquals(ExpectedStatsCalculator.remainingLevels(brother(11, 0)),
+                     ExpectedStatsCalculator.remainingLevels(11, 0));
+    }
+
+    @Test
+    void isFixed_trueWhenEqual() {
+        assertTrue(ExpectedStatsCalculator.isFixed(3, 3));
+        assertFalse(ExpectedStatsCalculator.isFixed(2, 3));
+        assertFalse(ExpectedStatsCalculator.isFixed(0, 3));
+    }
+
+    @Test
+    void isFlexible_trueWhenAllocatedButNotMax() {
+        assertTrue(ExpectedStatsCalculator.isFlexible(1, 3));
+        assertTrue(ExpectedStatsCalculator.isFlexible(2, 3));
+        assertFalse(ExpectedStatsCalculator.isFlexible(0, 3)); // not allocated
+        assertFalse(ExpectedStatsCalculator.isFlexible(3, 3)); // maxed (fixed)
+    }
+
+    @Test
+    void flexibleSlots_threeMinusFixed() {
+        assertEquals(3, ExpectedStatsCalculator.flexibleSlots(0));
+        assertEquals(1, ExpectedStatsCalculator.flexibleSlots(2));
+        assertEquals(0, ExpectedStatsCalculator.flexibleSlots(3));
+    }
+
+    @Test
+    void meanRoll_midpoint() {
+        StatPotentialCalculator.Range r = new StatPotentialCalculator.Range(2, 4);
+        assertEquals(3.0, ExpectedStatsCalculator.meanRoll(r), 1e-9);
+    }
+
+    @Test
+    void rollDeviation_positive() {
+        StatPotentialCalculator.Range r = new StatPotentialCalculator.Range(1, 3);
+        // mean = 2.0; roll=3 → deviation = 1.0
+        assertEquals(1.0, ExpectedStatsCalculator.rollDeviation(3, r), 1e-9);
+    }
+
+    @Test
+    void allocateByRoleTiers_matchesOriginalAutoAssignByRole() {
+        Role role = roleWith3P1();
+        Brother b = brother(5, 0); // remaining = 6
+        int[] expected = ExpectedStatsCalculator.autoAssignByRole(b, role);
+        int remaining = ExpectedStatsCalculator.remainingLevels(b);
+        int[] actual  = ExpectedStatsCalculator.allocateByRoleTiers(role.priority, remaining);
+        assertArrayEquals(expected, actual);
+    }
+
+    @Test
+    void allocateByRoleTiers_matchesOriginalAutoAssignPost11ByRole() {
+        Role role = roleWith3P1();
+        Brother b = brother(14, 0); // levelTotal=14 → postLevels=3
+        int[] expected = ExpectedStatsCalculator.autoAssignPost11ByRole(b, role);
+        int postLevels = Math.max(0, b.levelTotal - 11);
+        int[] actual   = ExpectedStatsCalculator.allocateByRoleTiers(role.priority, postLevels);
+        assertArrayEquals(expected, actual);
+    }
+
+    @Test
+    void statsAtTier_returnsCorrectStats() {
+        int[] priority = new int[8]; // all P3 by default
+        priority[Stat.HEALTH.ordinal()]    = 1;
+        priority[Stat.RESOLVE.ordinal()]   = 1;
+        priority[Stat.FATIGUE.ordinal()]   = 2;
+        List<se.niclas.broledger.model.Stat> p1 = ExpectedStatsCalculator.statsAtTier(priority, 1);
+        assertEquals(2, p1.size());
+        assertTrue(p1.contains(Stat.HEALTH));
+        assertTrue(p1.contains(Stat.RESOLVE));
+    }
+
+    @Test
+    void statsAtTier_defaultsToP3WhenPriorityNull() {
+        // null priority → all stats default to 3
+        List<se.niclas.broledger.model.Stat> p3 = ExpectedStatsCalculator.statsAtTier(null, 3);
+        assertEquals(8, p3.size());
+        assertTrue(ExpectedStatsCalculator.statsAtTier(null, 1).isEmpty());
+    }
+
+    @Test
+    void isFullyAllocated_trueWhenSumEquals3xRemaining() {
+        int[] inc = new int[8];
+        inc[Stat.HEALTH.ordinal()]      = 3;
+        inc[Stat.MELEE_SKILL.ordinal()] = 3;
+        // sum=6, remaining=2 → 3×2=6 ✓
+        assertTrue(ExpectedStatsCalculator.isFullyAllocated(inc, 2));
+        assertFalse(ExpectedStatsCalculator.isFullyAllocated(inc, 3));
     }
 }

@@ -50,10 +50,28 @@ public final class StatPotentialCalculator {
     static Range rangeForStars(int statIdx, int stars) {
         Range base = baseRange(statIdx);
         if (base == null) return null;
+        return applyStars(base, stars);
+    }
+
+    /**
+     * Applies talent-star adjustments to a base roll range.
+     * Rule: 1★/2★ raise the min by 1/2 respectively; 3★ also raises the max by 1.
+     */
+    static Range applyStars(Range base, int stars) {
         int s = Math.max(0, Math.min(stars, 3));
         int min = base.min() + Math.min(s, 2);
         int max = base.max() + (s >= 3 ? 1 : 0);
         return new Range(min, max);
+    }
+
+    /** Projects a base stat forward by {@code remaining} level-ups using a fixed per-level roll. */
+    static int projectBase(int base, int remaining, int perLevelRoll) {
+        return base + remaining * perLevelRoll;
+    }
+
+    /** Projects the expected (rounded) base stat forward using the mean of the roll range. */
+    static int projectExpectedBase(int base, int remaining, Range r) {
+        return (int) Math.round(base + remaining * (r.min() + r.max()) / 2.0);
     }
 
     /**
@@ -66,8 +84,7 @@ public final class StatPotentialCalculator {
         if (remaining == 0) return currentBase;
         Range r = rangeForStars(stat.statIndex(), stars);
         if (r == null) return currentBase;
-        double avgRoll = (r.min() + r.max()) / 2.0;
-        return (int) Math.round(currentBase + remaining * avgRoll);
+        return projectExpectedBase(currentBase, remaining, r);
     }
 
     /**
@@ -90,10 +107,10 @@ public final class StatPotentialCalculator {
         Range r = rangeForStars(statIdx, stars);
         if (r == null) r = new Range(0, 0);
 
-        int base = b.stats[statIdx];
-        int minBase = base + remaining * r.min();
-        int maxBase = base + remaining * r.max();
-        int expectedBase = (int) Math.round(base + remaining * (r.min() + r.max()) / 2.0);
+        int base         = b.stats[statIdx];
+        int minBase      = projectBase(base, remaining, r.min());
+        int maxBase      = projectBase(base, remaining, r.max());
+        int expectedBase = projectExpectedBase(base, remaining, r);
 
         StatModifierService.Breakdown bd =
                 StatModifierService.getInstance().computeWithBase(b, stat, expectedBase);

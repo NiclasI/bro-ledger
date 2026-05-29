@@ -27,32 +27,54 @@ public class ArmorCalculator {
     /** "min – max" damage range for the weapon slot, or "—" if empty. */
     public static String weaponDamageRange(Brother b) {
         InventorySlot slot = slot(b, SLOT_WEAPON);
-        if (slot == null || slot.stats == null) return "—";
+        if (!hasStats(slot)) return "—";
         ItemStats s = slot.stats;
-        if (s.damageMin == 0 && s.damageMax == 0) return "—";
-        return s.damageMin + " – " + s.damageMax;
+        return formatDamageRange(s.damageMin, s.damageMax);
     }
 
-    // ---- helpers ----
+    // ---- pure predicates & formatters (package-private, directly testable) ----
+
+    /** Returns true when this slot is non-null, non-empty, and has an ItemStats object. */
+    static boolean hasStats(InventorySlot s) {
+        return isUsableSlot(s) && s.stats != null;
+    }
+
+    /** Returns true when this slot is non-null and not empty. */
+    static boolean isUsableSlot(InventorySlot s) {
+        return s != null && !s.empty;
+    }
+
+    /** Returns true when a weapon's damage values are both zero (i.e. no damage / unset). */
+    static boolean hasNoDamage(ItemStats s) {
+        return s.damageMin == 0 && s.damageMax == 0;
+    }
+
+    /** Formats a weapon damage range, returning "—" when both values are zero. */
+    static String formatDamageRange(int min, int max) {
+        if (min == 0 && max == 0) return "—";
+        return min + " – " + max;
+    }
+
+    // ---- private helpers ----
 
     private static float durability(Brother b, int idx) {
         InventorySlot s = slot(b, idx);
-        return (s != null && s.stats != null) ? s.stats.durability : 0f;
+        return hasStats(s) ? s.stats.durability : 0f;
     }
 
     private static float baseFatigue(Brother b, int idx) {
         InventorySlot s = slot(b, idx);
-        return (s != null && s.stats != null) ? s.stats.baseFatigue : 0f;
+        return hasStats(s) ? s.stats.baseFatigue : 0f;
     }
 
     private static int weaponFatigue(Brother b) {
         InventorySlot s = slot(b, SLOT_WEAPON);
-        return (s != null && s.stats != null) ? s.stats.fatigueUse : 0;
+        return hasStats(s) ? s.stats.fatigueUse : 0;
     }
 
     private static InventorySlot slot(Brother b, int idx) {
         if (b.equippedSlots == null || idx >= b.equippedSlots.length) return null;
         InventorySlot s = b.equippedSlots[idx];
-        return (s == null || s.empty) ? null : s;
+        return isUsableSlot(s) ? s : null;
     }
 }

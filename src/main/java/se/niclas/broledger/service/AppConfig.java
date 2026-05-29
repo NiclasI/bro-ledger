@@ -36,6 +36,8 @@ public class AppConfig {
     public List<String> roleOrder;
     /** Expected-stats calculation mode: "NAIVE" (default) or "GREEDY". */
     public String expectedStatsMode = "NAIVE";
+    /** Level-up modal behaviour: "MODAL" (default), "AUTO_CLOSE" (15 s), or "OFF". */
+    public String levelUpModalMode = "MODAL";
 
     private AppConfig() {}
 
@@ -62,7 +64,8 @@ public class AppConfig {
             this.windowY             = loaded.windowY;
             this.overviewColumnOrder = loaded.overviewColumnOrder;
             this.roleOrder           = loaded.roleOrder;
-            if (loaded.expectedStatsMode != null) this.expectedStatsMode = loaded.expectedStatsMode;
+            if (loaded.expectedStatsMode  != null) this.expectedStatsMode  = loaded.expectedStatsMode;
+            if (loaded.levelUpModalMode   != null) this.levelUpModalMode   = loaded.levelUpModalMode;
         } catch (Exception e) {
             log.warning("AppConfig: could not read config — " + e.getMessage());
         }
@@ -105,8 +108,8 @@ public class AppConfig {
         List<Stat> ordered = new ArrayList<>();
         Set<Stat>  seen    = new HashSet<>();
         for (String colId : overviewColumnOrder) {
-            if (colId.startsWith("stat-")) {
-                String abbrev = colId.substring(5);
+            String abbrev = statAbbrevFromColumnId(colId);
+            if (abbrev != null) {
                 for (Stat s : Stat.values()) {
                     if (s.abbrev().equals(abbrev)) {
                         ordered.add(s);
@@ -120,6 +123,15 @@ public class AppConfig {
             if (!seen.contains(s)) ordered.add(s);
         }
         return ordered.toArray(new Stat[0]);
+    }
+
+    /**
+     * Extracts the stat abbreviation from an overview column-ID of the form {@code "stat-<abbrev>"}.
+     * Returns {@code null} for non-stat column IDs.
+     */
+    static String statAbbrevFromColumnId(String colId) {
+        if (colId != null && colId.startsWith("stat-")) return colId.substring(5);
+        return null;
     }
 
     /** For tests only — resets the singleton so the next getInstance() starts fresh. */

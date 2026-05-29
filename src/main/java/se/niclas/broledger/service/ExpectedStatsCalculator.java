@@ -38,7 +38,7 @@ public final class ExpectedStatsCalculator {
      *   <li>{@code result[1]} — naive: {@code rolls[i] * E[roll[i]]} with no selection benefit.</li>
      * </ul>
      *
-     * @param levelsRemaining  level-ups remaining (0–10)
+     * @param levelsRemaining  level-ups remaining (0–11)
      * @param stars            talent stars per stat (0–3), indexed by {@link Stat#ordinal()}
      * @param rolls            increases allocated to each stat; each ≤ levelsRemaining,
      *                         sum must equal 3 * levelsRemaining
@@ -53,27 +53,27 @@ public final class ExpectedStatsCalculator {
         double[] naive = new double[N];
         for (int i = 0; i < N; i++) {
             StatPotentialCalculator.Range r = StatPotentialCalculator.rangeForStars(STATS[i].statIndex(), stars[i]);
-            naive[i] = rolls[i] * (r.min() + r.max()) / 2.0;
+            naive[i] = rolls[i] * meanRoll(r);
         }
 
         if (levelsRemaining == 0) return new double[][]{new double[N], naive};
 
         int fixedCount = 0;
         for (int i = 0; i < N; i++)
-            if (rolls[i] == levelsRemaining) fixedCount++;
+            if (isFixed(rolls[i], levelsRemaining)) fixedCount++;
         // K counts only genuinely-flexible stats: allocated but not maxed (rolls[i] > 0 && < levelsRemaining).
         // Zero-allocation stats are excluded — they can never be selected and must not inflate K.
         int K = 0;
         for (int i = 0; i < N; i++)
-            if (rolls[i] > 0 && rolls[i] != levelsRemaining) K++;
+            if (isFlexible(rolls[i], levelsRemaining)) K++;
         if (K > 6) throw new TooManyFlexibleStatsException(K);
-        int flexSlots = 3 - fixedCount;
+        int flexSlots = flexibleSlots(fixedCount);
 
         double[] greedy = new double[N];
         for (int i = 0; i < N; i++)
-            if (rolls[i] == levelsRemaining) {
+            if (isFixed(rolls[i], levelsRemaining)) {
                 StatPotentialCalculator.Range r = StatPotentialCalculator.rangeForStars(STATS[i].statIndex(), stars[i]);
-                greedy[i] = rolls[i] * (r.min() + r.max()) / 2.0;
+                greedy[i] = rolls[i] * meanRoll(r);
             }
 
         if (flexSlots == 0) return new double[][]{greedy, naive};
@@ -86,13 +86,13 @@ public final class ExpectedStatsCalculator {
         int[]    flexPriority = new int[K];
         int k = 0;
         for (int i = 0; i < N; i++) {
-            if (rolls[i] > 0 && rolls[i] != levelsRemaining) {
+            if (isFlexible(rolls[i], levelsRemaining)) {
                 StatPotentialCalculator.Range r = StatPotentialCalculator.rangeForStars(STATS[i].statIndex(), stars[i]);
                 flexIdx[k]      = i;
                 flexRolls[k]    = rolls[i];
                 lo[k]           = r.min();
                 hi[k]           = r.max();
-                eRoll[k]        = (r.min() + r.max()) / 2.0;
+                eRoll[k]        = meanRoll(r);
                 flexPriority[k] = priority[i];
                 k++;
             }
@@ -113,7 +113,7 @@ public final class ExpectedStatsCalculator {
      * Structured form of the roll-priority guide.
      * Fixed stats (always pick) come first; flexible stats follow sorted by descending deviation.
      *
-     * @param levelsRemaining  level-ups remaining (0–10)
+     * @param levelsRemaining  level-ups remaining (0–11)
      * @param stars            talent stars per stat (0–3), indexed by {@link Stat#ordinal()}
      * @param rolls            increases allocated to each stat
      * @param priority         user preference per stat (1 = highest, 3 = lowest)
@@ -126,13 +126,12 @@ public final class ExpectedStatsCalculator {
         if (levelsRemaining == 0) return out;
         List<int[]> flexEntries = buildSortedFlexEntries(levelsRemaining, stars, rolls, priority);
         for (int i = 0; i < N; i++)
-            if (rolls[i] == levelsRemaining)
+            if (isFixed(rolls[i], levelsRemaining))
                 out.add(new PriorityEntry(STATS[i], true, 0, 0.0));
         for (int[] e : flexEntries) {
             StatPotentialCalculator.Range r =
                     StatPotentialCalculator.rangeForStars(STATS[e[0]].statIndex(), stars[e[0]]);
-            double dev = e[1] - (r.min() + r.max()) / 2.0;
-            out.add(new PriorityEntry(STATS[e[0]], false, e[1], dev));
+            out.add(new PriorityEntry(STATS[e[0]], false, e[1], rollDeviation(e[1], r)));
         }
         return out;
     }
@@ -141,7 +140,7 @@ public final class ExpectedStatsCalculator {
      * Returns a human-readable pick-priority guide for the flexible slot(s) at each level-up.
      * Fixed stats appear first; flexible stats are listed as one entry per (stat, roll) outcome.
      *
-     * @param levelsRemaining  level-ups remaining (0–10)
+     * @param levelsRemaining  level-ups remaining (0–11)
      * @param stars            talent stars per stat (0–3), indexed by {@link Stat#ordinal()}
      * @param rolls            increases allocated to each stat
      * @param priority         user preference per stat (1 = highest, 3 = lowest)
@@ -154,28 +153,24 @@ public final class ExpectedStatsCalculator {
         if (levelsRemaining == 0) return guide;
         List<int[]> entries = buildSortedFlexEntries(levelsRemaining, stars, rolls, priority);
         for (int i = 0; i < N; i++)
-            if (rolls[i] == levelsRemaining)
+            if (isFixed(rolls[i], levelsRemaining))
                 guide.add(String.format("Always pick %-18s  -", STATS[i].displayName()));
         for (int[] e : entries) {
             StatPotentialCalculator.Range r =
                     StatPotentialCalculator.rangeForStars(STATS[e[0]].statIndex(), stars[e[0]]);
-            double eRoll = (r.min() + r.max()) / 2.0;
-            double dev = e[1] - eRoll;
-            guide.add(String.format("%-18s  %d   %+.1f", STATS[e[0]].displayName(), e[1], dev));
+            guide.add(String.format("%-18s  %d   %+.1f",
+                    STATS[e[0]].displayName(), e[1], rollDeviation(e[1], r)));
         }
         return guide;
     }
 
     private static List<int[]> buildSortedFlexEntries(int levelsRemaining, int[] stars,
                                                        int[] rolls, int[] priority) {
-        int fixedCount = 0;
-        for (int i = 0; i < N; i++) if (rolls[i] == levelsRemaining) fixedCount++;
         // No K > 6 guard here — sorting by deviation is O(K × roll_range), not exponential.
         // The K ≤ 6 limit lives only in expectedGains where the full enumeration runs.
-
         List<int[]> entries = new ArrayList<>();
         for (int i = 0; i < N; i++) {
-            if (rolls[i] == levelsRemaining || rolls[i] == 0) continue;
+            if (isFixed(rolls[i], levelsRemaining) || rolls[i] == 0) continue;
             StatPotentialCalculator.Range r =
                     StatPotentialCalculator.rangeForStars(STATS[i].statIndex(), stars[i]);
             for (int rv = r.max(); rv >= r.min(); rv--)
@@ -186,8 +181,8 @@ public final class ExpectedStatsCalculator {
                     StatPotentialCalculator.rangeForStars(STATS[a[0]].statIndex(), stars[a[0]]);
             StatPotentialCalculator.Range rB =
                     StatPotentialCalculator.rangeForStars(STATS[b[0]].statIndex(), stars[b[0]]);
-            double devA = a[1] - (rA.min() + rA.max()) / 2.0;
-            double devB = b[1] - (rB.min() + rB.max()) / 2.0;
+            double devA = rollDeviation(a[1], rA);
+            double devB = rollDeviation(b[1], rB);
             if (devA != devB) return Double.compare(devB, devA);
             if (rolls[a[0]] != rolls[b[0]]) return Integer.compare(rolls[b[0]], rolls[a[0]]);
             if (priority[a[0]] != priority[b[0]]) return Integer.compare(priority[a[0]], priority[b[0]]);
@@ -276,9 +271,9 @@ public final class ExpectedStatsCalculator {
     }
 
     private static void validate(int levelsRemaining, int[] stars, int[] rolls, int[] priority) {
-        if (levelsRemaining < 0 || levelsRemaining > 10)
+        if (levelsRemaining < 0 || levelsRemaining > 11)
             throw new IllegalArgumentException(
-                "levelsRemaining must be 0–10, got " + levelsRemaining);
+                "levelsRemaining must be 0–11, got " + levelsRemaining);
         if (stars.length != N)
             throw new IllegalArgumentException("stars[] must have length " + N);
         if (rolls.length != N)
@@ -339,8 +334,13 @@ public final class ExpectedStatsCalculator {
      * ({@code Brother.levelPoints}). Returns 0 for brothers at lv 11 or beyond.
      */
     public static int remainingLevels(Brother b) {
-        if (b.levelTotal >= 11) return 0;
-        return Math.max(0, 11 - b.levelTotal) + Math.max(0, b.levelPoints);
+        return remainingLevels(b.levelTotal, b.levelPoints);
+    }
+
+    /** Pure overload — computes remaining pre-lv11 level-ups from raw fields. */
+    public static int remainingLevels(int levelTotal, int levelPoints) {
+        if (levelTotal >= 11) return 0;
+        return Math.max(0, 11 - levelTotal) + Math.max(0, levelPoints);
     }
 
     /**
@@ -412,38 +412,8 @@ public final class ExpectedStatsCalculator {
      */
     public static int[] autoAssignByRole(Brother b, Role role) {
         int remaining = remainingLevels(b);
-        int[] result = new int[N];
-        if (remaining == 0 || role == null) return result;
-
-        int budget = 3 * remaining;
-
-        for (int tier = 1; tier <= 3 && budget > 0; tier++) {
-            List<Stat> tierStats = new ArrayList<>();
-            for (Stat s : STATS) {
-                int ord = s.ordinal();
-                int prio = (role.priority != null && ord < role.priority.length)
-                        ? role.priority[ord] : 3;
-                if (prio == tier) tierStats.add(s);
-            }
-            if (tierStats.isEmpty()) continue;
-
-            int count = tierStats.size();
-            if ((long) count * remaining <= budget) {
-                // Can max out all stats in this tier.
-                for (Stat s : tierStats) result[s.ordinal()] = remaining;
-                budget -= count * remaining;
-            } else {
-                // Split budget equally; alphabetical tiebreaker for the remainder.
-                tierStats.sort(Comparator.comparing(Stat::displayName));
-                int each = budget / count;
-                int extra = budget % count;
-                for (int i = 0; i < count; i++) {
-                    result[tierStats.get(i).ordinal()] = each + (i < extra ? 1 : 0);
-                }
-                budget = 0;
-            }
-        }
-        return result;
+        if (remaining == 0 || role == null) return new int[N];
+        return allocateByRoleTiers(role.priority, remaining);
     }
 
     /**
@@ -455,26 +425,32 @@ public final class ExpectedStatsCalculator {
      */
     public static int[] autoAssignPost11ByRole(Brother b, Role role) {
         int postLevels = Math.max(0, b.levelTotal - 11);
+        if (postLevels == 0 || role == null) return new int[N];
+        return allocateByRoleTiers(role.priority, postLevels);
+    }
+
+    /**
+     * Core role-priority tier-allocation algorithm.
+     * P1 stats are filled first (up to perStatCap each), then P2, then P3.
+     * When the budget can't fully cover a tier, it is split equally with alphabetical tiebreaker.
+     *
+     * @param rolePriority  per-stat priority (1–3), indexed by {@link Stat#ordinal()}; may be null
+     * @param perStatCap    maximum increases per stat (= remaining pre-11 levels or post-11 levels)
+     * @return int[8] allocations indexed by {@link Stat#ordinal()}, summing to 3 × perStatCap
+     */
+    static int[] allocateByRoleTiers(int[] rolePriority, int perStatCap) {
         int[] result = new int[N];
-        if (postLevels == 0 || role == null) return result;
-
-        int budget = 3 * postLevels;
-
+        int budget = 3 * perStatCap;
         for (int tier = 1; tier <= 3 && budget > 0; tier++) {
-            List<Stat> tierStats = new ArrayList<>();
-            for (Stat s : STATS) {
-                int ord  = s.ordinal();
-                int prio = (role.priority != null && ord < role.priority.length)
-                        ? role.priority[ord] : 3;
-                if (prio == tier) tierStats.add(s);
-            }
+            List<Stat> tierStats = statsAtTier(rolePriority, tier);
             if (tierStats.isEmpty()) continue;
-
             int count = tierStats.size();
-            if ((long) count * postLevels <= budget) {
-                for (Stat s : tierStats) result[s.ordinal()] = postLevels;
-                budget -= count * postLevels;
+            if ((long) count * perStatCap <= budget) {
+                // Can max out all stats in this tier.
+                for (Stat s : tierStats) result[s.ordinal()] = perStatCap;
+                budget -= count * perStatCap;
             } else {
+                // Split budget equally; alphabetical tiebreaker for the remainder.
                 tierStats.sort(Comparator.comparing(Stat::displayName));
                 int each  = budget / count;
                 int extra = budget % count;
@@ -487,15 +463,55 @@ public final class ExpectedStatsCalculator {
         return result;
     }
 
+    /**
+     * Returns all stats whose effective priority equals the given tier.
+     * Stats absent from (or out-of-bounds in) {@code rolePriority} default to priority 3.
+     */
+    static List<Stat> statsAtTier(int[] rolePriority, int tier) {
+        List<Stat> tierStats = new ArrayList<>();
+        for (Stat s : STATS) {
+            int ord  = s.ordinal();
+            int prio = (rolePriority != null && ord < rolePriority.length) ? rolePriority[ord] : 3;
+            if (prio == tier) tierStats.add(s);
+        }
+        return tierStats;
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
+    // ---- pure calc / predicate helpers (package-private, directly unit-testable) ----
+
+    /** Expected value of one roll for the given range: (min + max) / 2.0. */
+    static double meanRoll(StatPotentialCalculator.Range r) {
+        return (r.min() + r.max()) / 2.0;
+    }
+
+    /** Deviation of an actual roll value from the stat's expected mean: rollValue − E[roll]. */
+    static double rollDeviation(int rollValue, StatPotentialCalculator.Range r) {
+        return rollValue - meanRoll(r);
+    }
+
+    /** A stat is "fixed" (always chosen at every level-up) when all its rolls are allocated. */
+    static boolean isFixed(int rolls, int levelsRemaining) {
+        return rolls == levelsRemaining;
+    }
+
+    /** A stat is "flexible" when some but not all levels are allocated to it. */
+    static boolean isFlexible(int rolls, int levelsRemaining) {
+        return rolls > 0 && rolls < levelsRemaining;
+    }
+
+    /** Number of flexible pick slots per level-up (3 picks minus the fixed-stat count). */
+    static int flexibleSlots(int fixedCount) {
+        return 3 - fixedCount;
+    }
+
     private static int naiveBase(Brother b, Stat stat, int currentBase, int count) {
         StatPotentialCalculator.Range r =
                 StatPotentialCalculator.rangeForStars(stat.statIndex(), b.stars[stat.starIndex()]);
-        double mean = (r.min() + r.max()) / 2.0;
-        return (int) Math.ceil(currentBase + count * mean);
+        return (int) Math.ceil(currentBase + count * meanRoll(r));
     }
 
     private static int greedyBase(Brother b, Stat stat, int[] increases, int currentBase, int remaining) {
@@ -511,7 +527,7 @@ public final class ExpectedStatsCalculator {
         }
     }
 
-    private static boolean isFullyAllocated(int[] increases, int remaining) {
+    static boolean isFullyAllocated(int[] increases, int remaining) {
         if (increases == null || increases.length < N) return false;
         int sum = 0;
         for (int v : increases) sum += v;

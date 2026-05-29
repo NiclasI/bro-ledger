@@ -4,6 +4,7 @@ import se.niclas.broledger.model.Brother;
 import se.niclas.broledger.model.InventorySlot;
 import se.niclas.broledger.model.TraitEntry;
 import se.niclas.broledger.service.DictionaryService;
+import se.niclas.broledger.util.HexUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -141,7 +142,7 @@ public class BrotherParser {
         b.salaryMultiplier    = reader.readFloatLE();
 
         // Wildman and Barbarian backgrounds carry an extra tattoo byte here
-        if (WILDMAN.equals(b.backgroundHexId) || BARBARIAN.equals(b.backgroundHexId)) {
+        if (hasTattooByte(b.backgroundHexId)) {
             b.tattoo = reader.readHexBytes(1);
         }
     }
@@ -205,7 +206,7 @@ public class BrotherParser {
             sb.append(reader.readHexBytes(1));
             int textLength = reader.readUInt16LE();
             // Re-encode textLength as 2-byte LE hex for blob storage
-            sb.append(String.format("%04X", Integer.reverseBytes(textLength << 16) >>> 16));
+            sb.append(HexUtils.uint16ToHexLE(textLength));
             sb.append(reader.readHexBytes(textLength + SaveFormat.MORALE_ENTRY_TAIL_BYTES));
         }
         sb.append(reader.readHexBytes(SaveFormat.MORALE_BLOCK_TAIL_BYTES));
@@ -224,9 +225,7 @@ public class BrotherParser {
     }
 
     private static String computeFingerprint(Brother b) {
-        StringBuilder sb = new StringBuilder(b.name).append('|').append(b.backgroundHexId).append('|');
-        for (int s : b.stars) sb.append(s);
-        String input = sb.toString();
+        String input = fingerprintInput(b.name, b.backgroundHexId, b.stars);
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] hash = md.digest(input.getBytes(StandardCharsets.UTF_8));
@@ -235,5 +234,17 @@ public class BrotherParser {
         } catch (NoSuchAlgorithmException e) {
             return input.hashCode() + "";
         }
+    }
+
+    /** Returns true for backgrounds that carry an extra tattoo byte in the save format. */
+    static boolean hasTattooByte(String backgroundHexId) {
+        return WILDMAN.equals(backgroundHexId) || BARBARIAN.equals(backgroundHexId);
+    }
+
+    /** Builds the canonical fingerprint input string from a brother's identity fields. */
+    static String fingerprintInput(String name, String backgroundHexId, int[] stars) {
+        StringBuilder sb = new StringBuilder(name).append('|').append(backgroundHexId).append('|');
+        for (int s : stars) sb.append(s);
+        return sb.toString();
     }
 }
