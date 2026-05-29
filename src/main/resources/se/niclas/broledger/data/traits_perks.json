@@ -1,0 +1,1145 @@
+{
+  "modifiers": [
+    {
+      "hexId": "AB0464F3",
+      "name": "Adrenaline",
+      "effects": [],
+      "description": "Unlocks the Adrenaline skill (costs 1 [Action Point] and 20 [Fatigue] ) which puts you first in the turn order for the next round, to have another turn before your enemies do. Note: if two characters are using Adrenaline skill , the one with the highest [Initiative] Initiative will act first. The character attracts slightly more attention from enemies.",
+      "tier": 1
+    },
+    {
+      "hexId": "1423C822",
+      "name": "Anticipation",
+      "effects": [],
+      "description": "When being attacked with ranged weapons, gain 1 + 10% of your base Ranged Defense as additional [Ranged Defense] per tile that the attacker is away, bonus is minimum +10 [Ranged Defense] .",
+      "tier": 3
+    },
+    {
+      "hexId": "1B63AB23",
+      "name": "Axe Mastery",
+      "effects": [],
+      "description": "Skills build up 25% less Fatigue. Split Shield damage to shields is increased by 50% when used with axes. Round Swing gains +5% chance to hit. The Longaxe no longer has a penalty for attacking targets directly adjacent.",
+      "tier": 4
+    },
+    {
+      "hexId": "71C41BDA",
+      "name": "Backstabber",
+      "effects": [],
+      "description": "The bonus to hitchance in melee is doubled to +10% for each ally (including your Hounds ) surrounding and distracting your target. Note: surrounding starts when two allies are adjacent to an enemy. See this section in Combat Mechanics and Hit Chance .",
+      "tier": 3
+    },
+    {
+      "hexId": "A546AF20",
+      "name": "Bags and Belts",
+      "effects": [],
+      "description": "Unlock two extra bag slots to carry all your favorite things. Items placed in bags no longer give a penalty to Maximum Fatigue, except for two-handed weapons.",
+      "tier": 1
+    },
+    {
+      "hexId": "37CEF631",
+      "name": "Battle Forged",
+      "effects": [],
+      "description": "Specialize in heavy armor: the heavier your armor and helmet, the more you benefit! Armor damage taken is reduced by a percentage equal to 5% of the current total armor value of both body and head armor. Does not affect damage from mental attacks or status effects.",
+      "tier": 6
+    },
+    {
+      "hexId": "97CB0D95",
+      "name": "Berserk",
+      "effects": [],
+      "description": "Once per turn, upon killing an enemy, 4 Action Points are immediately regained. Characters can not regain more than their maximum Action Points and no more than 4 for a single attack. The character attracts slightly more attention from opponents.",
+      "tier": 6
+    },
+    {
+      "hexId": "3967AB23",
+      "name": "Bow Mastery",
+      "effects": [],
+      "description": "Skills build up 25% less Fatigue. [Vision] is increased by 1 . Maximum firing range with bows is increased by 1 .",
+      "tier": 4
+    },
+    {
+      "hexId": "04A8366D",
+      "name": "Brawny",
+      "effects": [],
+      "description": "The [Fatigue] Fatigue and [Initiative] Initiative penalty from wearing armor and helmet is reduced by 30% .",
+      "tier": 3
+    },
+    {
+      "hexId": "CA385200",
+      "name": "Bullseye",
+      "effects": [],
+      "description": "The penalty to hit chance when shooting at a target that has no clear line of fire is reduced from 75% to 50% for ranged weapons. Note: this affects an initial, separate, hidden roll which determines whether the shot hits the intended target, and only applies when the intended target has cover. See Combat Mechanics and Hit Chance for further details.",
+      "tier": 2
+    },
+    {
+      "hexId": "CF52B42E",
+      "name": "Cleaver Mastery",
+      "effects": [],
+      "description": "Skills build up 25% less Fatigue. Bleeding damage inflicted by cleavers and whips is doubled to 10 and 20 per turn, respectively. (bleeding damage is increased from 5 to 10 per stack) Disarm penalty to hit is reduced to -10% . (down from -20% )",
+      "tier": 4
+    },
+    {
+      "hexId": "4C867685",
+      "name": "Colossus",
+      "effects": [
+        {
+          "stat": "health",
+          "percentage": 25
+        }
+      ],
+      "description": "Hitpoints are increased by 25% , which also reduces the chance to sustain debilitating injuries when being hit. Note: the bonus is always retroactively updated with maximum [Hitpoints] .",
+      "tier": 1
+    },
+    {
+      "hexId": "F9473B3C",
+      "name": "Crippling Strikes",
+      "effects": [],
+      "description": "Lowers the threshold to inflict injuries by 33% for both melee and ranged attacks. Note: some enemies are immune to injuries or have very large [Health] health pool that protects them from receiving injuries.",
+      "tier": 1
+    },
+    {
+      "hexId": "4BA8F880",
+      "name": "Crossbow Mastery",
+      "effects": [],
+      "description": "Skills build up 25% less Fatigue. An additional 20% of damage inflicted with crossbows ignores armor. Handgonnes now require 6 [Action Points] to reload and can be fired every turn instead of every other turn.",
+      "tier": 4
+    },
+    {
+      "hexId": "BBA910B8",
+      "name": "Dagger Mastery",
+      "effects": [],
+      "description": "Skills build up 25% less Fatigue. Stab, Puncture and Deathblow have a reduced Action Point cost (3 AP from 4) to allow for an additional attack each turn.",
+      "tier": 4
+    },
+    {
+      "hexId": "ECCF150A",
+      "name": "Dodge",
+      "effects": [],
+      "description": "Gain 15% of the character's current Initiative as a bonus to Melee and Ranged Defense.",
+      "tier": 2
+    },
+    {
+      "hexId": "C3229207",
+      "name": "Duelist",
+      "effects": [],
+      "description": "With the offhand free or carrying a throwable tool (e.g. a throwing net), an additional +25% of any damage ignores armor. Does not work with two-handed weapons.",
+      "tier": 7
+    },
+    {
+      "hexId": "059702B2",
+      "name": "Executioner",
+      "effects": [],
+      "description": "Inflict additional 20% [Damage] against targets that have sustained any injury effects, like a broken arm.",
+      "tier": 2
+    },
+    {
+      "hexId": "3E7523FA",
+      "name": "Fast Adaptation",
+      "effects": [],
+      "description": "Gain an additional stacking +10% chance to hit with each attack that misses an opponent. Bonus is reset upon landing a hit. Note: For the purposes of a reset on ranged attacks, hitting terrain blocking the target or a scattered shot counts as a hit and will reset the counter.",
+      "tier": 1
+    },
+    {
+      "hexId": "ABC22EAE",
+      "name": "Fearsome",
+      "effects": [],
+      "description": "Make them scatter and flee! Any attack that inflicts at least 1 point of damage to hitpoints triggers a morale check for the opponent with a penalty equal to 15% of your Resolve, as opposed to with no penalty and only if at or above 15 points of damage. Note: only triggers once per target for a same skill use (however, for Orcs it is applied on each Charge vs Spearwall) &#91; 1 &#93; &#91; 2 &#93; . Bonus from Resolve is capped at 20.",
+      "tier": 7
+    },
+    {
+      "hexId": "F1AB0AC0",
+      "name": "Flail Mastery",
+      "effects": [],
+      "description": "Skills build up 25% less Fatigue. Lash and Hail ignore the defense bonus of shield. Pound gains +10% [Direct Damage] on [a hit to the head] . Thresh gains +5% chance to hit.",
+      "tier": 4
+    },
+    {
+      "hexId": "404C93E1",
+      "name": "Footwork",
+      "effects": [],
+      "description": "Unlocks the Footwork skill (costs 3 [Action Points] and 20 [Fatigue] ) which allows to move while being in the enemy Zone of Control or to leave it without triggering opportunity attacks.",
+      "tier": 5
+    },
+    {
+      "hexId": "2468BB8C",
+      "name": "Fortified Mind",
+      "effects": [
+        {
+          "stat": "resolve",
+          "percentage": 25
+        }
+      ],
+      "description": "Resolve is increased by 25% . Note: the bonus is always retroactively updated with maximum [Resolve] .",
+      "tier": 2
+    },
+    {
+      "hexId": "9899E380",
+      "name": "Gifted",
+      "effects": [],
+      "description": "Instantly gain a levelup to increase this character's attributes with maximum rolls but without talents.",
+      "tier": 2
+    },
+    {
+      "hexId": "53D89DC8",
+      "name": "Hammer Mastery",
+      "effects": [],
+      "description": "Skills build up 25% less Fatigue. Destroy Armor and Demolish Armor inflict 33% more damage against armor. Shatter gains +5% chance to hit. The Polehammer no longer has a penalty for attacking targets directly adjacent.",
+      "tier": 4
+    },
+    {
+      "hexId": "80A40871",
+      "name": "Head Hunter",
+      "effects": [],
+      "description": "Hitting the head of a target will give you a guaranteed hit to the head also with your next attack. Connecting with your hit will reset the effect, but missing a hit - won't.",
+      "tier": 6
+    },
+    {
+      "hexId": "F521E3DD",
+      "name": "Indomitable",
+      "effects": [],
+      "description": "Unlocks the Indomitable skill (costs 5 [Action Points] and 25 [Fatigue] ) which grants a 50% [damage reduction] and immunity to being [Stunned] stunned, knocked back or grabbed for one turn. The character attracts less attention from opponents.",
+      "tier": 7
+    },
+    {
+      "hexId": "7C856C1D",
+      "name": "Killing Frenzy",
+      "effects": [],
+      "description": "A kill increases all damage by 25% for 2 turns. Does not stack, but another kill will reset the timer. The character attracts more attention from opponents. Note: the timer starts on the turn it activates, meaning that the buff will expire on the end of the character's next turn.",
+      "tier": 7
+    },
+    {
+      "hexId": "12CC3EA1",
+      "name": "Lone Wolf",
+      "effects": [],
+      "description": "I work best alone. With no ally within 3 tiles of distance, gain a 15% bonus to Melee Skill, Ranged Skill, Melee Defense, Ranged Defense, and Resolve.",
+      "tier": 5
+    },
+    {
+      "hexId": "5F1ECE27",
+      "name": "Mace Mastery",
+      "effects": [],
+      "description": "Skills build up 25% less Fatigue. Knock Out , Knock Over and Strike Down have a 100% (+25%) chance to stun the target if not immune. The Polemace no longer has a penalty for attacking targets directly adjacent.",
+      "tier": 4
+    },
+    {
+      "hexId": "385FD79D",
+      "name": "Nimble",
+      "effects": [],
+      "description": "Specialize in light armor: the lighter your armor and helmet, the more you benefit! Hitpoint damage taken is reduced by up to 60% , but lowered exponentially by the total penalty to Maximum Fatigue from body and head armor above 15 . Brawny does not affect this perk. Does not affect damage from mental attacks or status effects.",
+      "tier": 6
+    },
+    {
+      "hexId": "9D82F592",
+      "name": "Nine Lives",
+      "effects": [],
+      "description": "Once per battle, upon receiving a killing blow, survive with a few [Health] Hitpoints left and receive +15 [Melee Defense] , +15 [Ranged Defense] , +15 [Resolve] , +15 [Initiative] until your next turn. All damage over time status effects (bleed, poison, etc) are removed. Note: [Health] Hitpoints gained are a random number between 11-15.",
+      "tier": 1
+    },
+    {
+      "hexId": "026F2FA2",
+      "name": "Overwhelm",
+      "effects": [],
+      "description": "Learn to take advantage of your high Initiative and prevent the enemy from attacking effectively by overwhelming them with your attacks! With every attack, hit or miss, against an opponent that acts after you in the current round, inflict the 'Overwhelmed' status effect which lowers both Melee Skill and Ranged Skill by 10% for one turn. The effect stacks with each attack, and can be applied to multiple targets at once with a single attack.",
+      "tier": 5
+    },
+    {
+      "hexId": "565F97BE",
+      "name": "Pathfinder",
+      "effects": [],
+      "description": "Learn to move on difficult terrain. Action Point costs for movement on all terrain is reduced by -1 to a minimum of 2 [Action points] Action Points per tile, and [Fatigue] Fatigue cost is reduced to half. Changing height levels has no additional [Action points] Action Point cost anymore, but [Fatigue] Fatigue cost is unaffected.",
+      "tier": 1
+    },
+    {
+      "hexId": "1DE5F9FF",
+      "name": "Polearm Mastery",
+      "effects": [],
+      "description": "Skills build up 25% less Fatigue. Polearm skills have their action point cost reduced to 5 , and no longer have a penalty for attacking targets directly adjacent.",
+      "tier": 4
+    },
+    {
+      "hexId": "0BADB437",
+      "name": "Quick Hands",
+      "effects": [],
+      "description": "Swapping any item in battle except for shields becomes a free action with no Action Point cost once every turn. Note: This perk doesn't extend its effect for any actions with shields.",
+      "tier": 2
+    },
+    {
+      "hexId": "E3FC2F93",
+      "name": "Rally the Troops",
+      "effects": [],
+      "description": "Unlocks the 'Rally' skill (costs 5 [Action Points] and 25 [Fatigue] ) which can rally fleeing allies, and raise morale of all nearby allies to a steady level. The higher the [Resolve] of the character using the skill, the higher the chance to succeed. Note: Rally triggers a morale check to raise morale of any ally at Wavering or worse morale within 4 tiles; with a bonus of 40% of the skill user's Resolve, and a penalty of -10 per tile of distance, to the roll. It can also rally fleeing allies within the same range at no penalty. Character attracts moderately more attention from enemies.",
+      "tier": 3
+    },
+    {
+      "hexId": "BACAD9E4",
+      "name": "Reach Advantage",
+      "effects": [],
+      "description": "Each hit with a two-handed melee weapon adds a stack of Reach Advantage that increases your Melee Defense by 5 , up to a maximum of 5 stacks, until this character's next turn. A single attack hitting multiple targets can add several stacks at once. If you put away your weapon, you lose all stacks.",
+      "tier": 5
+    },
+    {
+      "hexId": "A3233C22",
+      "name": "Recover",
+      "effects": [],
+      "description": "Unlocks the [Recover] Recover skill which allows to reduce accumulated [Fatigue] Fatigue by 50% by resting for the current turn (costs 9 [Action Points] ).",
+      "tier": 1
+    },
+    {
+      "hexId": "CA7913AA",
+      "name": "Relentless",
+      "effects": [],
+      "description": "At all times your [Initiative] Initiative is reduced only by 50% of your accumulated [Fatigue] Fatigue, instead of all of it. Using the 'Wait' command no longer gives you a −25% penalty to [Initiative] Initiative when determining the turn order on the next round.",
+      "tier": 3
+    },
+    {
+      "hexId": "8BDA1308",
+      "name": "Resilient",
+      "effects": [],
+      "description": "Any negative status effect with a finite duration (e.g. Bleeding , Charmed ) has its duration reduced to 1 turn. Status effects that have their effects grow weaker over several turns (e.g. Goblin Poison ) are at their weakest state from the start.",
+      "tier": 2
+    },
+    {
+      "hexId": "09E3AD30",
+      "name": "Rotation",
+      "effects": [],
+      "description": "Unlocks the Rotation skill (costs 3 [Action Points] and 25 [Fatigue] ) which allows two characters to switch places while ignoring Zone of Control as long as neither character is stunned, rooted or otherwise disabled.",
+      "tier": 3
+    },
+    {
+      "hexId": "A1DE723D",
+      "name": "Shield Expert",
+      "effects": [],
+      "description": "The shield defense bonus is increased by 25% . This also applies to the additional defense bonus of the Shieldwall skill. Shield damage received is reduced by 50% to a minimum of 1. The 'Knock Back' skill gains +15% chance to hit.",
+      "tier": 3
+    },
+    {
+      "hexId": "E49B81C1",
+      "name": "Spear Mastery",
+      "effects": [],
+      "description": "Skills build up 25% less Fatigue. Spearwall is no longer disabled once an opponent manages to overcome it. Instead, Spearwall continues to give free attacks on any further opponent attempting to enter the zone of control. Spearwall can be activated when being already adjacent to opponents. The Spetum and Warfork no longer have a penalty for attacking targets directly adjacent.",
+      "tier": 4
+    },
+    {
+      "hexId": "07AD742B",
+      "name": "Steel Brow",
+      "effects": [],
+      "description": "Hits to the head no longer cause critical damage to this character, which also lowers the risk of sustaining debilitating head injuries . Note: Steel Brow negates the additional damage provided by Brute or Chop .",
+      "tier": 2
+    },
+    {
+      "hexId": "C07D23FB",
+      "name": "Student",
+      "effects": [],
+      "description": "Gain additional 20% [Experience] from battle. At the eleventh character level, you gain an additional perk point and this perk becomes inert. Playing the Manhunters origin, your [Background 60] Indebted get the perk point refunded at the seventh character level.",
+      "tier": 1
+    },
+    {
+      "hexId": "D03C87C1",
+      "name": "Sword Mastery",
+      "effects": [],
+      "description": "Skills build up 25% less Fatigue. Riposte no longer has a penalty to hitchance. Split and Swing gain a +10% chance to hit. Gash has 50% lower threshold to inflict injuries (+17%).",
+      "tier": 4
+    },
+    {
+      "hexId": "E1E8D40B",
+      "name": "Taunt",
+      "effects": [],
+      "description": "Unlocks the Taunt skill (costs 4 [Action Points] and 15 [Fatigue] , maximum range 3) which makes the targeted opponent take offensive actions instead of defensive ones, and attack the taunting character over another, potentially more vulnerable one. Note: this only works if the taunted enemy is able to engage the taunting character, ranged or melee. And will be ignored if there is no unobstructed path. While active, the character attracts more attention from enemies and higher Resolve further increases the attraction.",
+      "tier": 3
+    },
+    {
+      "hexId": "B7571E54",
+      "name": "Throwing Mastery",
+      "effects": [],
+      "description": "Throwing weapons skills build up 25% less Fatigue. Damage is increased by 30% when attacking at 2 tiles of distance. Damage is increased by 20% when attacking at 3 tiles of distance. Note: Throwable consumables and Slings cost less Fatigue to use. Slings receive damage bonus as well.",
+      "tier": 4
+    },
+    {
+      "hexId": "5D8933A5",
+      "name": "Underdog",
+      "effects": [],
+      "description": "The defense malus due to being surrounded by opponents no longer applies to this character. If an attacker has the Backstabber perk, the effect of that perk is negated, and the normal defense malus due to being surrounded is applied instead.",
+      "tier": 5
+    },
+    {
+      "hexId": "5EEFDF76",
+      "name": "Addict",
+      "effects": [
+        {
+          "stat": "resolve",
+          "percentage": -10
+        },
+        {
+          "stat": "melee_skill",
+          "percentage": -10
+        },
+        {
+          "stat": "ranged_skill",
+          "percentage": -10
+        },
+        {
+          "stat": "melee_defense",
+          "percentage": -10
+        },
+        {
+          "stat": "ranged_defense",
+          "percentage": -10
+        }
+      ],
+      "description": "-10% [Resolve] -10% [Melee Skill] -10% [Ranged Skill] -10% [Melee Defense] -10% [Ranged Defense]"
+    },
+    {
+      "hexId": "FD829D68",
+      "name": "Ailing",
+      "effects": [],
+      "description": "Poison effects last 1 additional turn"
+    },
+    {
+      "hexId": "38B9EBE5",
+      "name": "Arena Fighter",
+      "effects": [
+        {
+          "stat": "resolve",
+          "points": 5
+        }
+      ],
+      "description": "+5 [Resolve]"
+    },
+    {
+      "hexId": "90786E95",
+      "name": "Arena Veteran",
+      "effects": [
+        {
+          "stat": "resolve",
+          "points": 10
+        }
+      ],
+      "description": "+10 [Resolve]"
+    },
+    {
+      "hexId": "DF6EF729",
+      "name": "Asthmatic",
+      "effects": [],
+      "description": "-3 [Fatigue] recovery per turn"
+    },
+    {
+      "hexId": "6FF46EFE",
+      "name": "Athletic",
+      "effects": [],
+      "description": "Builds up 2 less [Fatigue] for each tile travelled"
+    },
+    {
+      "hexId": "A8EF0AC9",
+      "name": "Bleeder",
+      "effects": [],
+      "description": "Bleed effects last 1 additional turn"
+    },
+    {
+      "hexId": "988F2179",
+      "name": "Bloodthirsty",
+      "effects": [],
+      "description": "All kills are fatalities"
+    },
+    {
+      "hexId": "15A02709",
+      "name": "Brave",
+      "effects": [
+        {
+          "stat": "resolve",
+          "points": 5
+        }
+      ],
+      "description": "+5 [Resolve]"
+    },
+    {
+      "hexId": "D1B92F40",
+      "name": "Bright",
+      "effects": [],
+      "description": "+10% [Expirience gained]"
+    },
+    {
+      "hexId": "8F1F3216",
+      "name": "Brute",
+      "effects": [
+        {
+          "stat": "melee_skill",
+          "points": -5
+        }
+      ],
+      "description": "+15% [Damage to Head] -5 [Melee Skill]"
+    },
+    {
+      "hexId": "7CF4C987",
+      "name": "Clubfooted",
+      "effects": [],
+      "description": "+2 [Fatigue] for each tile traveled."
+    },
+    {
+      "hexId": "B65EAFC8",
+      "name": "Clumsy",
+      "effects": [
+        {
+          "stat": "melee_skill",
+          "points": -5
+        }
+      ],
+      "description": "-5 [Melee Skill]"
+    },
+    {
+      "hexId": "A6BB1D0B",
+      "name": "Cocky",
+      "effects": [
+        {
+          "stat": "resolve",
+          "points": 5
+        },
+        {
+          "stat": "melee_defense",
+          "points": -5
+        },
+        {
+          "stat": "ranged_defense",
+          "points": -5
+        }
+      ],
+      "description": "+5 [Resolve] -5 [Melee Defense] -5 [Ranged Defense]"
+    },
+    {
+      "hexId": "38B69657",
+      "name": "Craven",
+      "effects": [
+        {
+          "stat": "resolve",
+          "points": -10
+        }
+      ],
+      "description": "-10 [Resolve]"
+    },
+    {
+      "hexId": "35186772",
+      "name": "Cult of Davkul - Acolyte",
+      "effects": [
+        {
+          "stat": "resolve",
+          "points": 10
+        }
+      ],
+      "description": "+10 [Resolve]"
+    },
+    {
+      "hexId": "C8944B46",
+      "name": "Cult of Davkul - Chosen",
+      "effects": [
+        {
+          "stat": "health",
+          "points": 20
+        },
+        {
+          "stat": "resolve",
+          "points": 10
+        },
+        {
+          "stat": "melee_defense",
+          "points": 5
+        },
+        {
+          "stat": "ranged_defense",
+          "points": 5
+        }
+      ],
+      "description": "+20 [Hitpoints] +10 [Resolve] +5 [Melee Defense] +5 [Ranged Defense]"
+    },
+    {
+      "hexId": "893869F6",
+      "name": "Cult of Davkul - Disciple",
+      "effects": [
+        {
+          "stat": "health",
+          "points": 20
+        },
+        {
+          "stat": "resolve",
+          "points": 10
+        }
+      ],
+      "description": "+20 [Hitpoints] +10 [Resolve]"
+    },
+    {
+      "hexId": "5A92A3F2",
+      "name": "Cult of Davkul - Fanatic",
+      "effects": [
+        {
+          "stat": "resolve",
+          "points": 5
+        }
+      ],
+      "description": "+5 [Resolve]"
+    },
+    {
+      "hexId": "2EBB3F39",
+      "name": "Cult of Davkul - Prophet",
+      "effects": [
+        {
+          "stat": "health",
+          "points": 20
+        },
+        {
+          "stat": "resolve",
+          "points": 10
+        },
+        {
+          "stat": "melee_defense",
+          "points": 5
+        },
+        {
+          "stat": "ranged_defense",
+          "points": 5
+        }
+      ],
+      "description": "+20 [Hitpoints] +10 [Resolve] +5 [Melee Defense] +5 [Ranged Defense]"
+    },
+    {
+      "hexId": "635178DF",
+      "name": "Cult of Davkul - Zealot",
+      "effects": [
+        {
+          "stat": "resolve",
+          "points": 10
+        }
+      ],
+      "description": "+10 [Resolve]"
+    },
+    {
+      "hexId": "9CFA5D8B",
+      "name": "Dastard",
+      "effects": [],
+      "description": "Starts combat at wavering morale."
+    },
+    {
+      "hexId": "62BEC5FA",
+      "name": "Deathwish",
+      "effects": [],
+      "description": "No morale check is triggered upon losing [Hitpoints] hitpoints."
+    },
+    {
+      "hexId": "8E02892D",
+      "name": "Determined",
+      "effects": [],
+      "description": "Starts combat at confident morale if his mood permits it."
+    },
+    {
+      "hexId": "E8BBE11A",
+      "name": "Dexterous",
+      "effects": [
+        {
+          "stat": "melee_skill",
+          "points": 5
+        }
+      ],
+      "description": "+5 [Melee Skill]"
+    },
+    {
+      "hexId": "F21D84F3",
+      "name": "Disloyal",
+      "effects": [],
+      "description": "100% more likely to desert if unhappy."
+    },
+    {
+      "hexId": "A0CF9774",
+      "name": "Drunkard",
+      "effects": [
+        {
+          "stat": "resolve",
+          "points": 5
+        },
+        {
+          "stat": "melee_skill",
+          "points": -5
+        },
+        {
+          "stat": "ranged_skill",
+          "points": -10
+        }
+      ],
+      "description": "+10% [Damage dealt] +5 [Resolve] -5 [Melee Skill] -10 [Ranged Skill]"
+    },
+    {
+      "hexId": "B9DADFBC",
+      "name": "Dumb",
+      "effects": [],
+      "description": "-15% [Experience gained]"
+    },
+    {
+      "hexId": "843D8DD9",
+      "name": "Eagle Eyes",
+      "effects": [],
+      "description": "+1 [Vision]"
+    },
+    {
+      "hexId": "5065D234",
+      "name": "Fainthearted",
+      "effects": [
+        {
+          "stat": "resolve",
+          "points": -5
+        }
+      ],
+      "description": "-5 [Resolve]"
+    },
+    {
+      "hexId": "B4A3C9D5",
+      "name": "Fat",
+      "effects": [
+        {
+          "stat": "health",
+          "points": 10
+        },
+        {
+          "stat": "fatigue",
+          "points": -10
+        }
+      ],
+      "description": "+10 [Hitpoints] -10 [Fatigue]"
+    },
+    {
+      "hexId": "6472F278",
+      "name": "Fear of Beasts",
+      "effects": [],
+      "description": "-10 [Resolve] when in battle with beasts."
+    },
+    {
+      "hexId": "C3A17B67",
+      "name": "Fear of Greenskins",
+      "effects": [],
+      "description": "-10 [Resolve] when in battle with greenskins."
+    },
+    {
+      "hexId": "6F2C8614",
+      "name": "Fear of Undead",
+      "effects": [],
+      "description": "-10 [Resolve] when in battle with undead."
+    },
+    {
+      "hexId": "6AD5327F",
+      "name": "Fearless",
+      "effects": [
+        {
+          "stat": "resolve",
+          "points": 10
+        }
+      ],
+      "description": "+10 [Resolve]"
+    },
+    {
+      "hexId": "0B0E08CE",
+      "name": "Fragile",
+      "effects": [
+        {
+          "stat": "health",
+          "points": -10
+        }
+      ],
+      "description": "-10 [Hitpoints]"
+    },
+    {
+      "hexId": "C5C522E8",
+      "name": "Glorious Endurance",
+      "effects": [],
+      "description": "Glorious Endurance"
+    },
+    {
+      "hexId": "0625ED75",
+      "name": "Glorious Quickness",
+      "effects": [],
+      "description": "Glorious Quickness"
+    },
+    {
+      "hexId": "8C535E47",
+      "name": "Glorious Resolve",
+      "effects": [],
+      "description": "Glorious Resolve"
+    },
+    {
+      "hexId": "E5EB98D2",
+      "name": "Gluttonous",
+      "effects": [],
+      "description": "Eats 3, instead of 2 food per day."
+    },
+    {
+      "hexId": "E54F06E1",
+      "name": "Greedy",
+      "effects": [],
+      "description": "+15% [Daily Pay]"
+    },
+    {
+      "hexId": "0CF9D3DA",
+      "name": "Hate of Beasts",
+      "effects": [],
+      "description": "+10 [Resolve] when in battle with beasts."
+    },
+    {
+      "hexId": "EB251F2F",
+      "name": "Hate of Greenskins",
+      "effects": [],
+      "description": "+10 [Resolve] when in battle with greenskins."
+    },
+    {
+      "hexId": "17B36776",
+      "name": "Hate of Undead",
+      "effects": [],
+      "description": "+10 [Resolve] when in battle with undead."
+    },
+    {
+      "hexId": "494312EC",
+      "name": "Hesitant",
+      "effects": [
+        {
+          "stat": "initiative",
+          "points": -10
+        }
+      ],
+      "description": "-10 [Initiative]"
+    },
+    {
+      "hexId": "DA78B736",
+      "name": "Huge",
+      "effects": [
+        {
+          "stat": "melee_defense",
+          "points": -5
+        },
+        {
+          "stat": "ranged_defense",
+          "points": -5
+        }
+      ],
+      "description": "+10% [Melee Damage Dealt] -5 [Melee Defense] -5 [Ranged Defense]"
+    },
+    {
+      "hexId": "1CE5EF83",
+      "name": "Impatient",
+      "effects": [],
+      "description": "Always acts first in the first round of combat ( +1000 [Initiative] )."
+    },
+    {
+      "hexId": "1F2911A2",
+      "name": "Insecure",
+      "effects": [],
+      "description": "Will never be of confident morale."
+    },
+    {
+      "hexId": "F640E09A",
+      "name": "Iron Jaw",
+      "effects": [],
+      "description": "The threshold to sustain injuries on getting hit is increased by 25% ."
+    },
+    {
+      "hexId": "F138A2EF",
+      "name": "Iron Lungs",
+      "effects": [],
+      "description": "Recovers an extra 3 [Fatigue] every turn."
+    },
+    {
+      "hexId": "5E1A0586",
+      "name": "Irrational",
+      "effects": [],
+      "description": "Has +10 or -10 [Resolve] randomly at every morale check."
+    },
+    {
+      "hexId": "46ADB947",
+      "name": "Loyal",
+      "effects": [],
+      "description": "50% less likely to desert if unhappy."
+    },
+    {
+      "hexId": "C5B9A3A5",
+      "name": "Lucky",
+      "effects": [],
+      "description": "10% chance to require the attacker to make 2 successful attack rolls to hit you"
+    },
+    {
+      "hexId": "4B1B8DF7",
+      "name": "Mad",
+      "effects": [],
+      "description": "+15 or -15 [Resolve] at every morale check"
+    },
+    {
+      "hexId": "ACC46F0E",
+      "name": "Night Owl",
+      "effects": [],
+      "description": "+1 [Vision] during nighttime"
+    },
+    {
+      "hexId": "9F4D214B",
+      "name": "Nightblind",
+      "effects": [],
+      "description": "-1 [Vision] during nighttime"
+    },
+    {
+      "hexId": "1264B27C",
+      "name": "Oath of Cameraderie",
+      "effects": [],
+      "description": "Oath of Cameraderie"
+    },
+    {
+      "hexId": "E8C9ABDD",
+      "name": "Oath of Distinction",
+      "effects": [],
+      "description": "Oath of Distinction"
+    },
+    {
+      "hexId": "F92CAF1B",
+      "name": "Oath of Dominion",
+      "effects": [],
+      "description": "Oath of Dominion"
+    },
+    {
+      "hexId": "216F69CF",
+      "name": "Oath of Endurance",
+      "effects": [],
+      "description": "Oath of Endurance"
+    },
+    {
+      "hexId": "15CA117E",
+      "name": "Oath of Fortification 1",
+      "effects": [],
+      "description": "Oath of Fortification 1"
+    },
+    {
+      "hexId": "0D6FA3A4",
+      "name": "Oath of Fortification 2",
+      "effects": [],
+      "description": "Oath of Fortification 2"
+    },
+    {
+      "hexId": "D6461010",
+      "name": "Oath of Honor 1",
+      "effects": [],
+      "description": "Oath of Honor 1"
+    },
+    {
+      "hexId": "B6FBBE7B",
+      "name": "Oath of Honor 2",
+      "effects": [],
+      "description": "Oath of Honor 2"
+    },
+    {
+      "hexId": "8D416008",
+      "name": "Oath of Humility",
+      "effects": [],
+      "description": "Oath of Humility"
+    },
+    {
+      "hexId": "33F16C92",
+      "name": "Oath of Righteousness",
+      "effects": [],
+      "description": "Oath of Righteousness"
+    },
+    {
+      "hexId": "59E45E97",
+      "name": "Oath of Sacrifice",
+      "effects": [],
+      "description": "Oath of Sacrifice"
+    },
+    {
+      "hexId": "EC56A980",
+      "name": "Oath of Valor",
+      "effects": [],
+      "description": "Oath of Valor"
+    },
+    {
+      "hexId": "6C486AF9",
+      "name": "Oath of Vengeance",
+      "effects": [],
+      "description": "Oath of Vengeance"
+    },
+    {
+      "hexId": "B6885D2E",
+      "name": "Oath of Wrath",
+      "effects": [],
+      "description": "Oath of Wrath"
+    },
+    {
+      "hexId": "9CA0EBB9",
+      "name": "Old",
+      "effects": [
+        {
+          "stat": "resolve",
+          "points": 10
+        },
+        {
+          "stat": "health",
+          "points": -10
+        },
+        {
+          "stat": "fatigue",
+          "points": -10
+        },
+        {
+          "stat": "initiative",
+          "points": -10
+        }
+      ],
+      "description": "+10 [Resolve] -10 [Hitpoints] -10 [Fatigue] -10 [Initiative] -1 [Vision]"
+    },
+    {
+      "hexId": "9A95BB9E",
+      "name": "Optimist",
+      "effects": [],
+      "description": "+5 [Resolve] at all positive morale checks."
+    },
+    {
+      "hexId": "0756CE67",
+      "name": "Paranoid",
+      "effects": [
+        {
+          "stat": "melee_defense",
+          "points": 5
+        },
+        {
+          "stat": "ranged_defense",
+          "points": 5
+        },
+        {
+          "stat": "initiative",
+          "points": -30
+        }
+      ],
+      "description": "+5 [Melee Defense] +5 [Ranged Defense] -30 [Initiative]"
+    },
+    {
+      "hexId": "367B7B71",
+      "name": "Pessimist",
+      "effects": [],
+      "description": "-5 [Resolve] at negative morale checks."
+    },
+    {
+      "hexId": "DC2B39A5",
+      "name": "Pit Fighter",
+      "effects": [],
+      "description": "Pit Fighter"
+    },
+    {
+      "hexId": "DA1D1224",
+      "name": "Player Character",
+      "effects": [
+        {
+          "stat": "resolve",
+          "points": 10
+        }
+      ],
+      "description": "+10 [Resolve]"
+    },
+    {
+      "hexId": "C2C1134F",
+      "name": "Quick",
+      "effects": [
+        {
+          "stat": "initiative",
+          "points": 10
+        }
+      ],
+      "description": "+10 [Initiative]"
+    },
+    {
+      "hexId": "70AA50F5",
+      "name": "Short Sighted",
+      "effects": [],
+      "description": "-1 [Vision]"
+    },
+    {
+      "hexId": "124A03A3",
+      "name": "Spartan",
+      "effects": [],
+      "description": "Eats 1, instead of 2 food per day."
+    },
+    {
+      "hexId": "1ED3819C",
+      "name": "Strong",
+      "effects": [
+        {
+          "stat": "fatigue",
+          "points": 10
+        }
+      ],
+      "description": "+10 [Fatigue]"
+    },
+    {
+      "hexId": "880DBD6B",
+      "name": "Superstitious",
+      "effects": [],
+      "description": "-10 [Resolve] at morale checks against fear, panic or mind-control effects."
+    },
+    {
+      "hexId": "9D81C274",
+      "name": "Sure Footing",
+      "effects": [
+        {
+          "stat": "melee_defense",
+          "points": 5
+        }
+      ],
+      "description": "+5 [Melee Defense]"
+    },
+    {
+      "hexId": "818E0F24",
+      "name": "Survivor",
+      "effects": [],
+      "description": "90% chance to survive if reduced to 0 [Hitpoints]"
+    },
+    {
+      "hexId": "767F08BC",
+      "name": "Swift",
+      "effects": [
+        {
+          "stat": "ranged_defense",
+          "points": 5
+        }
+      ],
+      "description": "+5 [Ranged Defense]"
+    },
+    {
+      "hexId": "C5E53A6E",
+      "name": "Team Player",
+      "effects": [],
+      "description": "Has a 50% lower chance to inflict friendly fire."
+    },
+    {
+      "hexId": "994FE708",
+      "name": "Tiny",
+      "effects": [
+        {
+          "stat": "melee_defense",
+          "points": 5
+        },
+        {
+          "stat": "ranged_defense",
+          "points": 5
+        }
+      ],
+      "description": "+5 [Melee Defense] +5 [Ranged Defense] -15% [Melee Damage Dealt]"
+    },
+    {
+      "hexId": "B4760E9D",
+      "name": "Tough",
+      "effects": [
+        {
+          "stat": "health",
+          "points": 10
+        }
+      ],
+      "description": "+10 [Hitpoints]"
+    },
+    {
+      "hexId": "68DADB2C",
+      "name": "Unknown - 68DADB2C",
+      "effects": [],
+      "description": "Unknown - 68DADB2C"
+    },
+    {
+      "hexId": "E220534E",
+      "name": "Weasel",
+      "effects": [],
+      "description": "+25 [Melee Defense] while retreating"
+    }
+  ]
+}

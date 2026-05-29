@@ -1,0 +1,1112 @@
+{
+  "35F0CABD": {
+    "weaponClass": "Daggers",
+    "tier": 1,
+    "worth": 30,
+    "damageMin": 15,
+    "damageMax": 25,
+    "ignoresArmor": 20,
+    "vsArmor": 50
+  },
+  "AAB1F04F": {
+    "weaponClass": "Daggers",
+    "tier": 1,
+    "worth": 180,
+    "damageMin": 15,
+    "damageMax": 35,
+    "ignoresArmor": 20,
+    "vsArmor": 60
+  },
+  "AA4AFF46": {
+    "weaponClass": "Daggers",
+    "tier": 2,
+    "worth": 350,
+    "damageMin": 20,
+    "damageMax": 30,
+    "ignoresArmor": 20,
+    "vsArmor": 60
+  },
+  "F99B681D": {
+    "weaponClass": "Daggers",
+    "tier": 2,
+    "worth": 400,
+    "damageMin": 20,
+    "damageMax": 40,
+    "ignoresArmor": 20,
+    "vsArmor": 70
+  },
+  "A1CE9CC3": {
+    "weaponClass": "Daggers",
+    "tier": 3,
+    "worth": 1000,
+    "damageMin": 30,
+    "damageMax": 45,
+    "ignoresArmor": 20,
+    "vsArmor": 70
+  },
+  "1D0869A8": {
+    "weaponClass": "One-Handed Swords",
+    "tier": 1,
+    "worth": 200,
+    "damageMin": 30,
+    "damageMax": 35,
+    "ignoresArmor": 20,
+    "vsArmor": 75
+  },
+  "A3BB1210": {
+    "weaponClass": "One-Handed Swords",
+    "tier": 1,
+    "worth": 350,
+    "damageMin": 30,
+    "damageMax": 40,
+    "ignoresArmor": 20,
+    "vsArmor": 75
+  },
+  "EC38BEDC": {
+    "weaponClass": "One-Handed Swords",
+    "tier": 1,
+    "worth": 350,
+    "damageMin": 35,
+    "damageMax": 40,
+    "ignoresArmor": 20,
+    "vsArmor": 65
+  },
+  "886423C7": {
+    "weaponClass": "One-Handed Swords",
+    "tier": 1,
+    "worth": 500,
+    "damageMin": 35,
+    "damageMax": 45,
+    "ignoresArmor": 20,
+    "vsArmor": 70
+  },
+  "2E376C66": {
+    "weaponClass": "One-Handed Swords",
+    "tier": 2,
+    "worth": 900,
+    "damageMin": 35,
+    "damageMax": 45,
+    "ignoresArmor": 20,
+    "vsArmor": 70
+  },
+  "353981B3": {
+    "weaponClass": "One-Handed Swords",
+    "tier": 2,
+    "worth": 850,
+    "damageMin": 38,
+    "damageMax": 43,
+    "ignoresArmor": 20,
+    "vsArmor": 80
+  },
+  "5C27AB44": {
+    "weaponClass": "One-Handed Swords",
+    "tier": 2,
+    "worth": 1000,
+    "damageMin": 40,
+    "damageMax": 45,
+    "ignoresArmor": 20,
+    "vsArmor": 70
+  },
+  "BC7A6220": {
+    "weaponClass": "One-Handed Swords",
+    "tier": 2,
+    "worth": 1250,
+    "damageMin": 40,
+    "damageMax": 45,
+    "ignoresArmor": 20,
+    "vsArmor": 80
+  },
+  "3F304720": {
+    "weaponClass": "One-Handed Swords",
+    "tier": 3,
+    "worth": 2900,
+    "damageMin": 45,
+    "damageMax": 50,
+    "ignoresArmor": 20,
+    "vsArmor": 75
+  },
+  "72039E68": {
+    "weaponClass": "One-Handed Swords",
+    "tier": 3,
+    "worth": 3200,
+    "damageMin": 45,
+    "damageMax": 50,
+    "ignoresArmor": 20,
+    "vsArmor": 85
+  },
+  "6020114B": {
+    "weaponClass": "One-Handed Swords",
+    "tier": 2,
+    "worth": 1550,
+    "damageMin": 35,
+    "damageMax": 50,
+    "ignoresArmor": 20,
+    "vsArmor": 75
+  },
+  "AA37415E": {
+    "weaponClass": "Two-Handed Swords",
+    "tier": 1,
+    "worth": 1300,
+    "damageMin": 45,
+    "damageMax": 65,
+    "ignoresArmor": 20,
+    "vsArmor": 105
+  },
+  "1D4A54A0": {
+    "weaponClass": "Two-Handed Swords",
+    "tier": 1,
+    "worth": 1600,
+    "damageMin": 50,
+    "damageMax": 75,
+    "ignoresArmor": 20,
+    "vsArmor": 75
+  },
+  "F361A65D": {
+    "weaponClass": "Two-Handed Swords",
+    "tier": 2,
+    "worth": 1700,
+    "damageMin": 65,
+    "damageMax": 85,
+    "ignoresArmor": 25,
+    "vsArmor": 100
+  },
+  "56EA5919": {
+    "weaponClass": "Two-Handed Swords",
+    "tier": 3,
+    "worth": 3200,
+    "damageMin": 85,
+    "damageMax": 100,
+    "ignoresArmor": 25,
+    "vsArmor": 100
+  },
+  "2DB955CD": {
+    "weaponClass": "One-Handed Maces",
+    "tier": 1,
+    "worth": 35,
+    "damageMin": 15,
+    "damageMax": 25,
+    "ignoresArmor": 40,
+    "vsArmor": 50
+  },
+  "F047F2F7": {
+    "weaponClass": "One-Handed Maces",
+    "tier": 1,
+    "worth": 100,
+    "damageMin": 20,
+    "damageMax": 30,
+    "ignoresArmor": 50,
+    "vsArmor": 75
+  },
+  "24C82415": {
+    "weaponClass": "One-Handed Maces",
+    "tier": 1,
+    "worth": 90,
+    "damageMin": 20,
+    "damageMax": 35,
+    "ignoresArmor": 40,
+    "vsArmor": 75
+  },
+  "71B661AB": {
+    "weaponClass": "One-Handed Maces",
+    "tier": 1,
+    "worth": 100,
+    "damageMin": 25,
+    "damageMax": 35,
+    "ignoresArmor": 40,
+    "vsArmor": 90
+  },
+  "B9D46A8A": {
+    "weaponClass": "One-Handed Maces",
+    "tier": 2,
+    "worth": 400,
+    "damageMin": 30,
+    "damageMax": 40,
+    "ignoresArmor": 40,
+    "vsArmor": 110
+  },
+  "DF851FBA": {
+    "weaponClass": "One-Handed Maces",
+    "tier": 2,
+    "worth": 650,
+    "damageMin": 30,
+    "damageMax": 45,
+    "ignoresArmor": 40,
+    "vsArmor": 100
+  },
+  "7E11AB76": {
+    "weaponClass": "One-Handed Maces",
+    "tier": 3,
+    "worth": 2000,
+    "damageMin": 35,
+    "damageMax": 50,
+    "ignoresArmor": 40,
+    "vsArmor": 120
+  },
+  "4B40B36A": {
+    "weaponClass": "One-Handed Maces",
+    "tier": 3,
+    "worth": 2000,
+    "damageMin": 35,
+    "damageMax": 55,
+    "ignoresArmor": 40,
+    "vsArmor": 110
+  },
+  "0212E3FD": {
+    "weaponClass": "One-Handed Maces",
+    "tier": 2,
+    "worth": 1000,
+    "damageMin": 25,
+    "damageMax": 35,
+    "ignoresArmor": 40,
+    "vsArmor": 70
+  },
+  "FCF7A3FE": {
+    "weaponClass": "One-Handed Maces",
+    "tier": 2,
+    "worth": 150,
+    "damageMin": 25,
+    "damageMax": 40,
+    "ignoresArmor": 40,
+    "vsArmor": 75
+  },
+  "7F68C60D": {
+    "weaponClass": "One-Handed Maces",
+    "tier": 2,
+    "worth": 300,
+    "damageMin": 30,
+    "damageMax": 50,
+    "ignoresArmor": 40,
+    "vsArmor": 90
+  },
+  "72EC2FAB": {
+    "weaponClass": "One-Handed Maces",
+    "tier": 1,
+    "worth": 120,
+    "damageMin": 5,
+    "damageMax": 10,
+    "ignoresArmor": 40,
+    "vsArmor": 10
+  },
+  "1E62DD59": {
+    "weaponClass": "Two-Handed Maces",
+    "tier": 2,
+    "worth": 1100,
+    "damageMin": 50,
+    "damageMax": 75,
+    "ignoresArmor": 50,
+    "vsArmor": 115
+  },
+  "B68ED279": {
+    "weaponClass": "Two-Handed Maces",
+    "tier": 3,
+    "worth": 1900,
+    "damageMin": 75,
+    "damageMax": 95,
+    "ignoresArmor": 50,
+    "vsArmor": 125
+  },
+  "17962D15": {
+    "weaponClass": "Two-Handed Maces",
+    "tier": 2,
+    "worth": 1400,
+    "damageMin": 60,
+    "damageMax": 75,
+    "ignoresArmor": 40,
+    "vsArmor": 120
+  },
+  "C63CD8DE": {
+    "weaponClass": "Two-Handed Spears",
+    "tier": 2,
+    "worth": 600,
+    "damageMin": 45,
+    "damageMax": 75,
+    "ignoresArmor": 25,
+    "vsArmor": 110
+  },
+  "7F635B38": {
+    "weaponClass": "One-Handed Spears",
+    "tier": 1,
+    "worth": 180,
+    "damageMin": 25,
+    "damageMax": 30,
+    "ignoresArmor": 25,
+    "vsArmor": 90
+  },
+  "49987BB3": {
+    "weaponClass": "One-Handed Spears",
+    "tier": 1,
+    "worth": 150,
+    "damageMin": 20,
+    "damageMax": 35,
+    "ignoresArmor": 25,
+    "vsArmor": 100
+  },
+  "450FE0FD": {
+    "weaponClass": "One-Handed Spears",
+    "tier": 2,
+    "worth": 300,
+    "damageMin": 25,
+    "damageMax": 35,
+    "ignoresArmor": 25,
+    "vsArmor": 70
+  },
+  "DA31DCAF": {
+    "weaponClass": "One-Handed Spears",
+    "tier": 2,
+    "worth": 750,
+    "damageMin": 30,
+    "damageMax": 35,
+    "ignoresArmor": 25,
+    "vsArmor": 95
+  },
+  "EEECDDE5": {
+    "weaponClass": "One-Handed Spears",
+    "tier": 3,
+    "worth": 750,
+    "damageMin": 30,
+    "damageMax": 35,
+    "ignoresArmor": 25,
+    "vsArmor": 110
+  },
+  "7EF1AEA3": {
+    "weaponClass": "One-Handed Spears",
+    "tier": 3,
+    "worth": 2250,
+    "damageMin": 35,
+    "damageMax": 40,
+    "ignoresArmor": 25,
+    "vsArmor": 100
+  },
+  "E05EABE8": {
+    "weaponClass": "Two-Handed Spears",
+    "tier": 1,
+    "worth": 400,
+    "damageMin": 40,
+    "damageMax": 60,
+    "ignoresArmor": 25,
+    "vsArmor": 100
+  },
+  "5AF69B8F": {
+    "weaponClass": "Two-Handed Spears",
+    "tier": 3,
+    "worth": 750,
+    "damageMin": 55,
+    "damageMax": 75,
+    "ignoresArmor": 25,
+    "vsArmor": 100
+  },
+  "1DECF1F2": {
+    "weaponClass": "One-Handed Axes",
+    "tier": 1,
+    "worth": 210,
+    "damageMin": 25,
+    "damageMax": 40,
+    "ignoresArmor": 30,
+    "vsArmor": 110
+  },
+  "F40BF13A": {
+    "weaponClass": "One-Handed Axes",
+    "tier": 2,
+    "worth": 800,
+    "damageMin": 30,
+    "damageMax": 40,
+    "ignoresArmor": 40,
+    "vsArmor": 120
+  },
+  "F40E4004": {
+    "weaponClass": "One-Handed Axes",
+    "tier": 2,
+    "worth": 900,
+    "damageMin": 30,
+    "damageMax": 45,
+    "ignoresArmor": 30,
+    "vsArmor": 120
+  },
+  "45E0BBBD": {
+    "weaponClass": "One-Handed Axes",
+    "tier": 3,
+    "worth": 2800,
+    "damageMin": 35,
+    "damageMax": 55,
+    "ignoresArmor": 30,
+    "vsArmor": 130
+  },
+  "F59DDF7D": {
+    "weaponClass": "One-Handed Axes",
+    "tier": 2,
+    "worth": 1100,
+    "damageMin": 35,
+    "damageMax": 65,
+    "ignoresArmor": 30,
+    "vsArmor": 130
+  },
+  "10DF4EBA": {
+    "weaponClass": "One-Handed Hammers",
+    "tier": 1,
+    "worth": 800,
+    "damageMin": 20,
+    "damageMax": 30,
+    "ignoresArmor": 60,
+    "vsArmor": 200
+  },
+  "6CDC5B88": {
+    "weaponClass": "Two-Handed Axes",
+    "tier": 1,
+    "worth": 400,
+    "damageMin": 35,
+    "damageMax": 70,
+    "ignoresArmor": 40,
+    "vsArmor": 125
+  },
+  "48F10562": {
+    "weaponClass": "Two-Handed Axes",
+    "tier": 2,
+    "worth": 2000,
+    "damageMin": 75,
+    "damageMax": 90,
+    "ignoresArmor": 50,
+    "vsArmor": 150
+  },
+  "FE4E8776": {
+    "weaponClass": "Two-Handed Axes",
+    "tier": 3,
+    "worth": 2200,
+    "damageMin": 75,
+    "damageMax": 95,
+    "ignoresArmor": 40,
+    "vsArmor": 130
+  },
+  "11FE31EC": {
+    "weaponClass": "Two-Handed Axes",
+    "tier": 3,
+    "worth": 2400,
+    "damageMin": 80,
+    "damageMax": 100,
+    "ignoresArmor": 40,
+    "vsArmor": 150
+  },
+  "2AE99ABE": {
+    "weaponClass": "Two-Handed Axes",
+    "tier": 2,
+    "worth": 1500,
+    "damageMin": 90,
+    "damageMax": 120,
+    "ignoresArmor": 40,
+    "vsArmor": 160
+  },
+  "F645DE8F": {
+    "weaponClass": "Two-Handed Axes",
+    "tier": 2,
+    "worth": 1200,
+    "damageMin": 70,
+    "damageMax": 95,
+    "ignoresArmor": 30,
+    "vsArmor": 110
+  },
+  "1F9CDBCB": {
+    "weaponClass": "One-Handed Flails",
+    "tier": 1,
+    "worth": 40,
+    "damageMin": 10,
+    "damageMax": 25,
+    "ignoresArmor": 30,
+    "vsArmor": 50
+  },
+  "C3D0BA5D": {
+    "weaponClass": "One-Handed Flails",
+    "tier": 2,
+    "worth": 300,
+    "damageMin": 20,
+    "damageMax": 45,
+    "ignoresArmor": 30,
+    "vsArmor": 80
+  },
+  "743D3ABD": {
+    "weaponClass": "One-Handed Flails",
+    "tier": 3,
+    "worth": 1300,
+    "damageMin": 25,
+    "damageMax": 55,
+    "ignoresArmor": 30,
+    "vsArmor": 100
+  },
+  "0D552778": {
+    "weaponClass": "Two-Handed Flails",
+    "tier": 3,
+    "worth": 1500,
+    "damageMin": 30,
+    "damageMax": 75,
+    "ignoresArmor": 30,
+    "vsArmor": 100
+  },
+  "573A189E": {
+    "weaponClass": "Two-Handed Flails",
+    "tier": 1,
+    "worth": 500,
+    "damageMin": 30,
+    "damageMax": 60,
+    "ignoresArmor": 30,
+    "vsArmor": 80
+  },
+  "8C763FFC": {
+    "weaponClass": "Two-Handed Flails",
+    "tier": 2,
+    "worth": 1400,
+    "damageMin": 45,
+    "damageMax": 90,
+    "ignoresArmor": 30,
+    "vsArmor": 115
+  },
+  "1803EC93": {
+    "weaponClass": "Two-Handed Flails",
+    "tier": 2,
+    "worth": 1300,
+    "damageMin": 50,
+    "damageMax": 100,
+    "ignoresArmor": 30,
+    "vsArmor": 125
+  },
+  "B3EAA613": {
+    "weaponClass": "One-Handed Cleavers",
+    "tier": 1,
+    "worth": 120,
+    "damageMin": 20,
+    "damageMax": 30,
+    "ignoresArmor": 35,
+    "vsArmor": 75
+  },
+  "0D479170": {
+    "weaponClass": "One-Handed Cleavers",
+    "tier": 1,
+    "worth": 110,
+    "damageMin": 20,
+    "damageMax": 35,
+    "ignoresArmor": 25,
+    "vsArmor": 75
+  },
+  "D040B3C1": {
+    "weaponClass": "One-Handed Cleavers",
+    "tier": 1,
+    "worth": 350,
+    "damageMin": 25,
+    "damageMax": 35,
+    "ignoresArmor": 25,
+    "vsArmor": 80
+  },
+  "3A7EBFD3": {
+    "weaponClass": "One-Handed Cleavers",
+    "tier": 2,
+    "worth": 600,
+    "damageMin": 30,
+    "damageMax": 40,
+    "ignoresArmor": 35,
+    "vsArmor": 80
+  },
+  "0368E41B": {
+    "weaponClass": "One-Handed Cleavers",
+    "tier": 2,
+    "worth": 700,
+    "damageMin": 30,
+    "damageMax": 45,
+    "ignoresArmor": 25,
+    "vsArmor": 80
+  },
+  "5FEC8442": {
+    "weaponClass": "One-Handed Cleavers",
+    "tier": 3,
+    "worth": 1300,
+    "damageMin": 35,
+    "damageMax": 55,
+    "ignoresArmor": 25,
+    "vsArmor": 120
+  },
+  "4C960354": {
+    "weaponClass": "One-Handed Cleavers",
+    "tier": 3,
+    "worth": 1900,
+    "damageMin": 40,
+    "damageMax": 60,
+    "ignoresArmor": 25,
+    "vsArmor": 90
+  },
+  "092AA98C": {
+    "weaponClass": "One-Handed Cleavers",
+    "tier": 3,
+    "worth": 1100,
+    "damageMin": 40,
+    "damageMax": 70,
+    "ignoresArmor": 25,
+    "vsArmor": 110
+  },
+  "17E0E8A4": {
+    "weaponClass": "One-Handed Cleavers",
+    "tier": 2,
+    "worth": 400,
+    "damageMin": 15,
+    "damageMax": 25,
+    "ignoresArmor": 20,
+    "vsArmor": 30
+  },
+  "B33AFB8A": {
+    "weaponClass": "One-Handed Cleavers",
+    "tier": 2,
+    "worth": 450,
+    "damageMin": 15,
+    "damageMax": 30,
+    "ignoresArmor": 10,
+    "vsArmor": 25
+  },
+  "80FDC89D": {
+    "weaponClass": "Two-Handed Cleavers",
+    "tier": 2,
+    "worth": 1800,
+    "damageMin": 50,
+    "damageMax": 70,
+    "ignoresArmor": 25,
+    "vsArmor": 90
+  },
+  "FC3FD8AD": {
+    "weaponClass": "Two-Handed Cleavers",
+    "tier": 1,
+    "worth": 1600,
+    "damageMin": 60,
+    "damageMax": 80,
+    "ignoresArmor": 35,
+    "vsArmor": 110
+  },
+  "A8E24050": {
+    "weaponClass": "Two-Handed Cleavers",
+    "tier": 3,
+    "worth": 2000,
+    "damageMin": 60,
+    "damageMax": 80,
+    "ignoresArmor": 25,
+    "vsArmor": 120
+  },
+  "1938B2CD": {
+    "weaponClass": "Two-Handed Swords",
+    "tier": 2,
+    "worth": 2400,
+    "damageMin": 65,
+    "damageMax": 85,
+    "ignoresArmor": 25,
+    "vsArmor": 110
+  },
+  "35AD91D9": {
+    "weaponClass": "One-Handed Hammers",
+    "tier": 1,
+    "worth": 120,
+    "damageMin": 15,
+    "damageMax": 30,
+    "ignoresArmor": 50,
+    "vsArmor": 150
+  },
+  "E54456F6": {
+    "weaponClass": "One-Handed Hammers",
+    "tier": 2,
+    "worth": 900,
+    "damageMin": 20,
+    "damageMax": 35,
+    "ignoresArmor": 50,
+    "vsArmor": 200
+  },
+  "C8701E43": {
+    "weaponClass": "One-Handed Hammers",
+    "tier": 3,
+    "worth": 2300,
+    "damageMin": 30,
+    "damageMax": 40,
+    "ignoresArmor": 50,
+    "vsArmor": 225
+  },
+  "116D93E0": {
+    "weaponClass": "Two-Handed Hammers",
+    "tier": 1,
+    "worth": 500,
+    "damageMin": 40,
+    "damageMax": 70,
+    "ignoresArmor": 50,
+    "vsArmor": 150
+  },
+  "4CFA7D7B": {
+    "weaponClass": "One-Handed Hammers",
+    "tier": 2,
+    "worth": 1300,
+    "damageMin": 45,
+    "damageMax": 65,
+    "ignoresArmor": 60,
+    "vsArmor": 180
+  },
+  "BA203F7C": {
+    "weaponClass": "Two-Handed Hammers",
+    "tier": 3,
+    "worth": 2000,
+    "damageMin": 60,
+    "damageMax": 90,
+    "ignoresArmor": 50,
+    "vsArmor": 200
+  },
+  "CA64D63F": {
+    "weaponClass": "Two-Handed Hammers",
+    "tier": 2,
+    "worth": 1500,
+    "damageMin": 50,
+    "damageMax": 75,
+    "ignoresArmor": 50,
+    "vsArmor": 185
+  },
+  "8AE27C83": {
+    "weaponClass": "Polearms",
+    "tier": 1,
+    "worth": 150,
+    "damageMin": 30,
+    "damageMax": 50,
+    "ignoresArmor": 30,
+    "vsArmor": 75
+  },
+  "D9D3CFFA": {
+    "weaponClass": "Polearms",
+    "tier": 1,
+    "worth": 350,
+    "damageMin": 35,
+    "damageMax": 55,
+    "ignoresArmor": 30,
+    "vsArmor": 80
+  },
+  "55510B91": {
+    "weaponClass": "Polearms",
+    "tier": 2,
+    "worth": 700,
+    "damageMin": 40,
+    "damageMax": 70,
+    "ignoresArmor": 30,
+    "vsArmor": 110
+  },
+  "73CF9B1B": {
+    "weaponClass": "Polearms",
+    "tier": 2,
+    "worth": 800,
+    "damageMin": 50,
+    "damageMax": 70,
+    "ignoresArmor": 25,
+    "vsArmor": 90
+  },
+  "C6792058": {
+    "weaponClass": "Polearms",
+    "tier": 3,
+    "worth": 1500,
+    "damageMin": 50,
+    "damageMax": 70,
+    "ignoresArmor": 30,
+    "vsArmor": 100
+  },
+  "B13235B0": {
+    "weaponClass": "Polearms",
+    "tier": 2,
+    "worth": 600,
+    "damageMin": 55,
+    "damageMax": 80,
+    "ignoresArmor": 30,
+    "vsArmor": 125
+  },
+  "F7323A98": {
+    "weaponClass": "Polearms",
+    "tier": 2,
+    "worth": 700,
+    "damageMin": 55,
+    "damageMax": 80,
+    "ignoresArmor": 30,
+    "vsArmor": 105
+  },
+  "6DC232AB": {
+    "weaponClass": "Polearms",
+    "tier": 2,
+    "worth": 900,
+    "damageMin": 60,
+    "damageMax": 80,
+    "ignoresArmor": 30,
+    "vsArmor": 100
+  },
+  "EB9CC0EA": {
+    "weaponClass": "Polearms",
+    "tier": 3,
+    "worth": 1300,
+    "damageMin": 60,
+    "damageMax": 80,
+    "ignoresArmor": 30,
+    "vsArmor": 90
+  },
+  "28F70D26": {
+    "weaponClass": "Polearms",
+    "tier": 3,
+    "worth": 1400,
+    "damageMin": 55,
+    "damageMax": 85,
+    "ignoresArmor": 30,
+    "vsArmor": 140
+  },
+  "FF5FC55F": {
+    "weaponClass": "Bows",
+    "tier": 1,
+    "worth": 100,
+    "damageMin": 30,
+    "damageMax": 50,
+    "ignoresArmor": 35,
+    "vsArmor": 50,
+    "range": 7,
+    "durability": 48,
+    "maxFatigue": -6
+  },
+  "821C497D": {
+    "weaponClass": "Bows",
+    "tier": 1,
+    "worth": 250,
+    "damageMin": 25,
+    "damageMax": 40,
+    "ignoresArmor": 35,
+    "vsArmor": 55,
+    "range": 6,
+    "durability": 52,
+    "maxFatigue": -3
+  },
+  "07490C1C": {
+    "weaponClass": "Bows",
+    "tier": 1,
+    "worth": 200,
+    "damageMin": 30,
+    "damageMax": 50,
+    "ignoresArmor": 35,
+    "vsArmor": 50,
+    "range": 7,
+    "durability": 60,
+    "maxFatigue": -4
+  },
+  "3E918595": {
+    "weaponClass": "Bows",
+    "tier": 2,
+    "worth": 500,
+    "damageMin": 30,
+    "damageMax": 50,
+    "ignoresArmor": 35,
+    "vsArmor": 60,
+    "range": 7,
+    "durability": 62,
+    "maxFatigue": -4
+  },
+  "FF1476E9": {
+    "weaponClass": "Bows",
+    "tier": 2,
+    "worth": 400,
+    "damageMin": 40,
+    "damageMax": 55,
+    "ignoresArmor": 35,
+    "vsArmor": 70,
+    "range": 6,
+    "durability": 80,
+    "maxFatigue": -6
+  },
+  "E885B64C": {
+    "weaponClass": "Bows",
+    "tier": 2,
+    "worth": 600,
+    "damageMin": 40,
+    "damageMax": 60,
+    "ignoresArmor": 35,
+    "vsArmor": 55,
+    "range": 7,
+    "durability": 80,
+    "maxFatigue": -6
+  },
+  "EDAFA5E8": {
+    "weaponClass": "Bows",
+    "tier": 3,
+    "worth": 2900,
+    "damageMin": 50,
+    "damageMax": 70,
+    "ignoresArmor": 35,
+    "vsArmor": 60,
+    "range": 7,
+    "durability": 100,
+    "maxFatigue": -6
+  },
+  "66E7A159": {
+    "weaponClass": "Bows",
+    "tier": 3,
+    "worth": 3500,
+    "damageMin": 50,
+    "damageMax": 75,
+    "ignoresArmor": 35,
+    "vsArmor": 65,
+    "range": 7,
+    "durability": 110,
+    "maxFatigue": -6
+  },
+  "EDC9F13A": {
+    "weaponClass": "Crossbows",
+    "tier": 1,
+    "worth": 300,
+    "damageMin": 30,
+    "damageMax": 50,
+    "ignoresArmor": 50,
+    "vsArmor": 60,
+    "range": 6,
+    "durability": 40,
+    "maxFatigue": -6
+  },
+  "621503AE": {
+    "weaponClass": "Crossbows",
+    "tier": 2,
+    "worth": 750,
+    "damageMin": 40,
+    "damageMax": 60,
+    "ignoresArmor": 50,
+    "vsArmor": 70,
+    "range": 6,
+    "durability": 48,
+    "maxFatigue": -8
+  },
+  "1E7C3FB0": {
+    "weaponClass": "Crossbows",
+    "tier": 3,
+    "worth": 3200,
+    "damageMin": 50,
+    "damageMax": 70,
+    "ignoresArmor": 50,
+    "vsArmor": 75,
+    "range": 6,
+    "durability": 64,
+    "maxFatigue": -12
+  },
+  "08E84B4D": {
+    "weaponClass": "Crossbows",
+    "tier": 3,
+    "worth": 2000,
+    "damageMin": 50,
+    "damageMax": 70,
+    "ignoresArmor": 50,
+    "vsArmor": 75,
+    "range": 6,
+    "durability": 72,
+    "maxFatigue": -10
+  },
+  "DF5E187F": {
+    "weaponClass": "Throwing Weapons",
+    "tier": 2,
+    "worth": 200,
+    "damageMin": 20,
+    "damageMax": 35,
+    "ignoresArmor": 40,
+    "vsArmor": 70,
+    "range": 4,
+    "maxFatigue": -3
+  },
+  "EC329C8F": {
+    "weaponClass": "Throwing Weapons",
+    "tier": 1,
+    "worth": 150,
+    "damageMin": 30,
+    "damageMax": 40,
+    "ignoresArmor": 45,
+    "vsArmor": 70,
+    "range": 4,
+    "maxFatigue": -8
+  },
+  "3D810825": {
+    "weaponClass": "Throwing Weapons",
+    "tier": 2,
+    "worth": 200,
+    "damageMin": 30,
+    "damageMax": 45,
+    "ignoresArmor": 45,
+    "vsArmor": 75,
+    "range": 4,
+    "maxFatigue": -6
+  },
+  "71AB21D1": {
+    "weaponClass": "Throwing Weapons",
+    "tier": 3,
+    "worth": 300,
+    "damageMin": 35,
+    "damageMax": 50,
+    "ignoresArmor": 45,
+    "vsArmor": 80,
+    "range": 4,
+    "maxFatigue": -8
+  },
+  "671B0F53": {
+    "weaponClass": "Throwing Weapons",
+    "tier": 2,
+    "worth": 200,
+    "damageMin": 25,
+    "damageMax": 40,
+    "vsArmor": 110,
+    "range": 4,
+    "maxFatigue": -4
+  },
+  "AB80307D": {
+    "weaponClass": "Throwing Weapons",
+    "tier": 3,
+    "worth": 300,
+    "damageMin": 30,
+    "damageMax": 50,
+    "vsArmor": 115,
+    "range": 4,
+    "maxFatigue": -6
+  },
+  "502AC62D": {
+    "weaponClass": "Throwing Weapons",
+    "tier": 3,
+    "worth": 80,
+    "damageMin": 45,
+    "damageMax": 70,
+    "ignoresArmor": 45,
+    "vsArmor": 110,
+    "range": 4,
+    "maxFatigue": -6
+  },
+  "9CB0C3EC": {
+    "weaponClass": "Throwing Weapons",
+    "tier": 1,
+    "worth": 150,
+    "damageMin": 25,
+    "damageMax": 40,
+    "ignoresArmor": 35,
+    "vsArmor": 50,
+    "range": 6,
+    "maxFatigue": -4
+  },
+  "4496D3C5": {
+    "weaponClass": "Throwing Weapons",
+    "tier": 3,
+    "worth": 300,
+    "damageMin": 35,
+    "damageMax": 50,
+    "ignoresArmor": 35,
+    "vsArmor": 60,
+    "range": 6,
+    "maxFatigue": -6
+  },
+  "4763A24A": {
+    "weaponClass": "Handgonnes",
+    "tier": 3,
+    "worth": 3000,
+    "damageMin": 35,
+    "damageMax": 75,
+    "ignoresArmor": 25,
+    "vsArmor": 90,
+    "range": 2,
+    "durability": 60,
+    "maxFatigue": -14
+  },
+  "7920A2A5": {
+    "weaponClass": "Two-Handed Maces",
+    "tier": 1,
+    "worth": 900,
+    "damageMin": 50,
+    "damageMax": 70,
+    "ignoresArmor": 60,
+    "vsArmor": 115,
+    "durability": 72,
+    "maxFatigue": -14
+  }
+}
