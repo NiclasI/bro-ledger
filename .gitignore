@@ -5,12 +5,13 @@
 mvnw*
 
 game-art/
-/data/
+/data
 
 brothers_report.txt
 *.png
 *.lnk
 BACKLOG_*.md
+TEMP_*.md
 
 target/
 dependency-reduced-pom.xml
