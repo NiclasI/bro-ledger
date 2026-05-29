@@ -8,6 +8,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import se.niclas.broledger.model.Stat;
 import se.niclas.broledger.service.AnnotationService.LevelUpEvent;
+import se.niclas.broledger.service.DictionaryService;
 
 import java.net.URL;
 import java.util.List;
@@ -51,9 +52,24 @@ public class LevelUpModalController implements Initializable {
         for (Stat s : Stat.values()) {
             Integer delta = ev.statDeltas().get(s);
             if (delta == null || delta <= 0) continue;
-            Label statLine = new Label(s.displayName() + "  +" + delta);
+            Integer consumed = ev.consumedIncreases().get(s);
+            String text = s.displayName() + "  +" + delta
+                    + (consumed != null ? "  (" + consumed + " planned consumed)" : "");
+            Label statLine = new Label(text);
             statLine.getStyleClass().add("stat-label");
+            if (consumed != null && consumed < ev.levelsAssigned()) {
+                statLine.setStyle("-fx-text-fill: #c87820;");
+            }
             card.getChildren().add(statLine);
+        }
+
+        if (!ev.addedPerkIds().isEmpty()) {
+            DictionaryService dict = DictionaryService.getInstance();
+            for (String perkId : ev.addedPerkIds()) {
+                Label perkLine = new Label("Perk: " + dict.getName(perkId));
+                perkLine.getStyleClass().add("stat-label");
+                card.getChildren().add(perkLine);
+            }
         }
 
         String statusText = ev.adjusted()

@@ -204,8 +204,11 @@ public class AnnotationService {
     public record LevelUpEvent(
             String name,
             boolean adjusted,
+            int levelsAssigned,
             Map<Stat, Integer> statDeltas,
-            List<Stat> adjustedStats
+            List<Stat> adjustedStats,
+            Map<Stat, Integer> consumedIncreases,
+            List<String> addedPerkIds
     ) {}
 
     /**
@@ -242,9 +245,19 @@ public class AnnotationService {
 
             log.fine("  [" + nb.name + "]: " + (ob.levelPoints - nb.levelPoints) + " level(s) assigned in-game");
 
+            int levelsAssigned = ob.levelPoints - nb.levelPoints;
+
             BrotherAnnotation a = get(nb.fingerprint);
-            Map<Stat, Integer> statDeltasLocal    = new EnumMap<>(Stat.class);
-            List<Stat>         adjustedStatsLocal = new ArrayList<>();
+            Map<Stat, Integer> statDeltasLocal        = new EnumMap<>(Stat.class);
+            List<Stat>         adjustedStatsLocal     = new ArrayList<>();
+            Map<Stat, Integer> consumedIncreasesLocal = new EnumMap<>(Stat.class);
+
+            List<String> addedPerkIdsLocal = nb.perkIds.stream()
+                    .filter(id -> !ob.perkIds.contains(id))
+                    .toList();
+            if (!addedPerkIdsLocal.isEmpty()) {
+                log.fine("  [" + nb.name + "]: " + addedPerkIdsLocal.size() + " perk(s) added: " + addedPerkIdsLocal);
+            }
 
             for (Stat s : Stat.values()) {
                 int ord = s.ordinal();
@@ -262,8 +275,15 @@ public class AnnotationService {
 
                 if (statDelta <= 0 || planned <= 0) continue;
 
-                log.fine("    -> consuming 1 planned increase: " + planned + " -> " + (planned - 1));
-                a.statIncreases[ord] = planned - 1;
+                int stars = (si < nb.stars.length) ? nb.stars[s.starIndex()] : 0;
+                StatPotentialCalculator.Range range = StatPotentialCalculator.rangeForStars(si, stars);
+                int maxPerRoll = (range != null) ? range.max() : statDelta;
+                int raisesLowerBound = (int) Math.ceil((double) statDelta / maxPerRoll);
+                int toConsume = Math.min(raisesLowerBound, planned);
+
+                log.fine("    -> consuming " + toConsume + " planned increase(s): " + planned + " -> " + (planned - toConsume));
+                a.statIncreases[ord] = planned - toConsume;
+                consumedIncreasesLocal.put(s, toConsume);
                 adjustedStatsLocal.add(s);
             }
 
@@ -279,8 +299,11 @@ public class AnnotationService {
             events.add(new LevelUpEvent(
                     nb.name,
                     !adjustedStatsLocal.isEmpty(),
+                    levelsAssigned,
                     Collections.unmodifiableMap(statDeltasLocal),
-                    Collections.unmodifiableList(adjustedStatsLocal)
+                    Collections.unmodifiableList(adjustedStatsLocal),
+                    Collections.unmodifiableMap(consumedIncreasesLocal),
+                    Collections.unmodifiableList(addedPerkIdsLocal)
             ));
         }
 

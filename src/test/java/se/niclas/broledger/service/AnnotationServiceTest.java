@@ -248,8 +248,8 @@ class AnnotationServiceTest {
 
         assertEquals(1, events.size());
         assertTrue(events.get(0).adjusted());
-        // Each stat decremented at most once regardless of level count
-        assertEquals(1, service.get("R3").statIncreases[Stat.HEALTH.ordinal()]);
+        // HEALTH delta=5, 0★ maxPerRoll=4: ceil(5/4)=2 raises proved → consume 2, leaving 0
+        assertEquals(0, service.get("R3").statIncreases[Stat.HEALTH.ordinal()]);
         assertEquals(0, service.get("R3").statIncreases[Stat.MELEE_SKILL.ordinal()]);
         assertEquals(2, events.get(0).adjustedStats().size());
     }
@@ -279,5 +279,83 @@ class AnnotationServiceTest {
         List<LevelUpEvent> events = service.reconcileOnReload(List.of(ob), List.of(nb));
 
         assertTrue(events.isEmpty());
+    }
+
+    @Test
+    void reconcile_reportsAddedPerks() {
+        int[] stats = new int[8];
+
+        Brother ob = makeBrother("P1", "Gorm", 1, stats, new int[8]);
+        ob.perkIds.add("AAAA0001");
+
+        Brother nb = makeBrother("P1", "Gorm", 0, stats.clone(), new int[8]);
+        nb.perkIds.add("AAAA0001"); // existing perk
+        nb.perkIds.add("BBBB0002"); // newly acquired perk
+
+        List<LevelUpEvent> events = service.reconcileOnReload(List.of(ob), List.of(nb));
+
+        assertEquals(1, events.size());
+        LevelUpEvent e = events.get(0);
+        assertEquals(List.of("BBBB0002"), e.addedPerkIds());
+    }
+
+    @Test
+    void reconcile_consumesLowerBoundRaisesForMultipleLevels() {
+        // N=3 levels, Health delta=9 at 0★: ceil(9/4)=3 raises proved, planned=5 → consume 3, leave 2
+        int[] statsOld = new int[8], statsNew = new int[8];
+        statsOld[Stat.HEALTH.statIndex()] = 60;
+        statsNew[Stat.HEALTH.statIndex()] = 69;
+
+        Brother ob = makeBrother("ML1", "Brunhilde", 3, statsOld, new int[8]);
+        Brother nb = makeBrother("ML1", "Brunhilde", 0, statsNew, new int[8]);
+
+        int[] planned = new int[Stat.values().length];
+        planned[Stat.HEALTH.ordinal()] = 5;
+        service.setStatIncreases("ML1", planned);
+
+        List<LevelUpEvent> events = service.reconcileOnReload(List.of(ob), List.of(nb));
+
+        assertEquals(1, events.size());
+        assertTrue(events.get(0).adjusted());
+        assertEquals(3, events.get(0).levelsAssigned());
+        assertEquals(3, events.get(0).consumedIncreases().get(Stat.HEALTH));
+        assertEquals(2, service.get("ML1").statIncreases[Stat.HEALTH.ordinal()]);
+    }
+
+    @Test
+    void reconcile_capsConsumedAtPlannedCount() {
+        // Health delta=12 at 0★: ceil(12/4)=3, but only 2 planned → consume 2, leave 0
+        int[] statsOld = new int[8], statsNew = new int[8];
+        statsOld[Stat.HEALTH.statIndex()] = 60;
+        statsNew[Stat.HEALTH.statIndex()] = 72;
+
+        Brother ob = makeBrother("ML2", "Gorm", 5, statsOld, new int[8]);
+        Brother nb = makeBrother("ML2", "Gorm", 0, statsNew, new int[8]);
+
+        int[] planned = new int[Stat.values().length];
+        planned[Stat.HEALTH.ordinal()] = 2;
+        service.setStatIncreases("ML2", planned);
+
+        List<LevelUpEvent> events = service.reconcileOnReload(List.of(ob), List.of(nb));
+
+        assertEquals(1, events.size());
+        assertEquals(2, events.get(0).consumedIncreases().get(Stat.HEALTH));
+        assertEquals(0, service.get("ML2").statIncreases[Stat.HEALTH.ordinal()]);
+    }
+
+    @Test
+    void reconcile_emptyAddedPerksWhenNoneAdded() {
+        int[] stats = new int[8];
+
+        Brother ob = makeBrother("P2", "Hildr", 1, stats, new int[8]);
+        ob.perkIds.add("CCCC0003");
+
+        Brother nb = makeBrother("P2", "Hildr", 0, stats.clone(), new int[8]);
+        nb.perkIds.add("CCCC0003"); // same perk, none added
+
+        List<LevelUpEvent> events = service.reconcileOnReload(List.of(ob), List.of(nb));
+
+        assertEquals(1, events.size());
+        assertTrue(events.get(0).addedPerkIds().isEmpty());
     }
 }
