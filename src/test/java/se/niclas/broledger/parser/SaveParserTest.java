@@ -32,7 +32,7 @@ class SaveParserTest {
 
         String savPath = System.getProperty("sav.file");
         if(savPath == null) {
-            savPath = "c:\\dev\\repo\\bb-keeper\\src\\test\\example\\TestSavefile.sav";
+            savPath = "src/test/example/TestSavefile.sav";
         }
         Path savFile = Path.of(savPath);
         if (System.getProperty("hex.dump") != null) {
