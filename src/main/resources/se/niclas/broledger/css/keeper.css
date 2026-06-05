@@ -527,7 +527,14 @@
     -fx-text-fill: #78c87a;
 }
 
-/* Priority guide tooltip */
+/* Priority guide popup */
+.priority-guide-tooltip {
+    -fx-background-color: #0f0a04;
+    -fx-border-color: #3a2510;
+    -fx-border-width: 1;
+    -fx-padding: 8;
+}
+
 .priority-guide-header {
     -fx-font-size: 12px;
     -fx-font-weight: bold;

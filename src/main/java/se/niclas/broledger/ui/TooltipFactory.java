@@ -166,6 +166,14 @@ public class TooltipFactory {
      */
     public static Tooltip forLevelPriorityGuide(
             List<ExpectedStatsCalculator.PriorityEntry> entries, int remaining) {
+        Tooltip t = new Tooltip();
+        t.getStyleClass().add("item-tooltip");
+        t.setGraphic(guideContent(entries, remaining));
+        return t;
+    }
+
+    static VBox guideContent(
+            List<ExpectedStatsCalculator.PriorityEntry> entries, int remaining) {
         VBox root = new VBox(4);
         root.getStyleClass().add("priority-guide-tooltip");
 
@@ -205,10 +213,7 @@ public class TooltipFactory {
             root.getChildren().add(row);
         }
 
-        Tooltip t = new Tooltip();
-        t.getStyleClass().add("item-tooltip");
-        t.setGraphic(root);
-        return t;
+        return root;
     }
 
     /**

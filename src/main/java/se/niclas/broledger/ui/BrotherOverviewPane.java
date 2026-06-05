@@ -9,9 +9,14 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.event.EventHandler;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.TransferMode;
+import javafx.stage.Popup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -413,10 +418,52 @@ public class BrotherOverviewPane {
             private final Label   allottedLabel = new Label();
             private final VBox    box           = new VBox(0, lvlLabel, allottedLabel);
             private       Brother cachedBrother = null;
+
+            // Guide popup state
+            private final Popup guidePopup = new Popup();
+            private EventHandler<KeyEvent> escapeHandler = null;
+            private List<ExpectedStatsCalculator.PriorityEntry> cachedEntries = null;
+            private int cachedRemaining = 0;
             {
                 lvlLabel.getStyleClass().add("overview-stat-val");
                 allottedLabel.getStyleClass().add("level-allotted-label");
                 box.setAlignment(Pos.CENTER);
+
+                guidePopup.setAutoHide(true);
+                guidePopup.setAutoFix(true);
+                guidePopup.setOnShown(e -> {
+                    if (box.getScene() != null) {
+                        escapeHandler = ke -> {
+                            if (ke.getCode() == KeyCode.ESCAPE) {
+                                guidePopup.hide();
+                                ke.consume();
+                            }
+                        };
+                        box.getScene().addEventFilter(KeyEvent.KEY_PRESSED, escapeHandler);
+                    }
+                });
+                guidePopup.setOnHidden(e -> {
+                    if (escapeHandler != null && box.getScene() != null) {
+                        box.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, escapeHandler);
+                        escapeHandler = null;
+                    }
+                });
+
+                box.setOnMouseClicked(e -> {
+                    if (e.getButton() != MouseButton.PRIMARY) return;
+                    if (cachedEntries == null) return;
+                    if (guidePopup.isShowing()) {
+                        guidePopup.hide();
+                    } else {
+                        javafx.scene.Node content = TooltipFactory.guideContent(cachedEntries, cachedRemaining);
+                        guidePopup.getContent().setAll(content);
+                        javafx.geometry.Bounds bounds = box.localToScreen(box.getBoundsInLocal());
+                        if (bounds != null)
+                            guidePopup.show(box, bounds.getMaxX() + 4, bounds.getMinY());
+                    }
+                    e.consume();
+                });
+
                 potentialMode.addListener((obs, o, n) -> {
                     applyAllottedVisibility();
                     if (cachedBrother != null) refreshCell(cachedBrother);
@@ -456,30 +503,40 @@ public class BrotherOverviewPane {
                         allottedLabel.getStyleClass().add("level-allotted-green");
                 }
 
-                // Tooltip
-                if (b.levelTotal == 11) {
-                    setTooltip(styled("Max level reached"));
-                } else if (budget.post11()) {
-                    if (budget.free() > 0) {
-                        setTooltip(styled("Assign post-lv11 increases\n("
-                                + usedBudget + " / " + totalBudget + " used)"));
-                    } else {
-                        setTooltip(styled("Post-lv11 increases fully assigned"));
-                    }
-                } else if (budget.cap() == 0) {
-                    setTooltip(styled("Max level reached"));
-                } else if (usedBudget == totalBudget && increases != null) {
-                    setTooltip(buildGuideTooltip(b, budget.cap(), increases));
+                // Guide popup vs. plain tooltip
+                if (usedBudget == totalBudget && increases != null
+                        && budget.cap() > 0 && !budget.post11()) {
+                    // Guide is available — use sticky popup, no tooltip
+                    setTooltip(null);
+                    guidePopup.hide();
+                    cachedEntries  = buildGuideEntries(b, budget.cap(), increases);
+                    cachedRemaining = budget.cap();
                 } else {
-                    String pendingNote = b.levelPoints > 0
-                            ? b.levelPoints + " unassigned level-up(s) folded into budget.\n" : "";
-                    setTooltip(styled(pendingNote + "Assign all increases to see\nthe roll priority guide.\n("
-                            + usedBudget + " / " + totalBudget + " used)"));
+                    // Guide not applicable — clear popup data, use plain tooltip
+                    cachedEntries = null;
+                    guidePopup.hide();
+                    if (b.levelTotal == 11 || budget.cap() == 0) {
+                        setTooltip(styled("Max level reached"));
+                    } else if (budget.post11()) {
+                        if (budget.free() > 0) {
+                            setTooltip(styled("Assign post-lv11 increases\n("
+                                    + usedBudget + " / " + totalBudget + " used)"));
+                        } else {
+                            setTooltip(styled("Post-lv11 increases fully assigned"));
+                        }
+                    } else {
+                        String pendingNote = b.levelPoints > 0
+                                ? b.levelPoints + " unassigned level-up(s) folded into budget.\n" : "";
+                        setTooltip(styled(pendingNote + "Assign all increases to see\nthe roll priority guide.\n("
+                                + usedBudget + " / " + totalBudget + " used)"));
+                    }
                 }
             }
 
             @Override protected void updateItem(Brother b, boolean empty) {
                 super.updateItem(b, empty);
+                guidePopup.hide();
+                cachedEntries = null;
                 if (empty || b == null) { cachedBrother = null; setGraphic(null); return; }
                 cachedBrother = b;
                 lvlLabel.setText(String.valueOf(b.levelTotal));
@@ -495,22 +552,20 @@ public class BrotherOverviewPane {
                 setPadding(Insets.EMPTY);
             }
 
-            private Tooltip buildGuideTooltip(Brother b, int remaining, int[] rolls) {
+            private List<ExpectedStatsCalculator.PriorityEntry> buildGuideEntries(
+                    Brother b, int remaining, int[] rolls) {
                 int[] stars = new int[STATS.length];
                 for (int i = 0; i < STATS.length; i++) stars[i] = b.stars[STATS[i].starIndex()];
                 String roleId = b.fingerprint != null
                         ? ctx.annotation().get(b.fingerprint).roleId : null;
-                se.niclas.broledger.model.Role role =
-                        roleId != null ? ctx.roles().getById(roleId) : null;
+                Role role = roleId != null ? ctx.roles().getById(roleId) : null;
                 int[] priority = new int[STATS.length];
-                java.util.Arrays.fill(priority, 3);
+                Arrays.fill(priority, 3);
                 if (role != null && role.priority != null)
                     System.arraycopy(role.priority, 0, priority, 0,
                             Math.min(role.priority.length, priority.length));
-                List<ExpectedStatsCalculator.PriorityEntry> entries =
-                        ExpectedStatsCalculator.rollPriorityGuideEntries(
-                                remaining, stars, rolls, priority);
-                return TooltipFactory.forLevelPriorityGuide(entries, remaining);
+                return ExpectedStatsCalculator.rollPriorityGuideEntries(
+                        remaining, stars, rolls, priority);
             }
         });
         return col;
