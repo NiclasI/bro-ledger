@@ -8,12 +8,12 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox styleClass="app-frame" minWidth="400" minHeight="200"
+<VBox styleClass="app-frame,level-up-frame" minWidth="400" minHeight="200"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="se.niclas.broledger.ui.LevelUpModalController">
 
-    <HBox fx:id="titleBar" styleClass="title-bar" alignment="CENTER_LEFT">
-        <Label text="Level Up Detected" styleClass="title-bar-label"/>
+    <HBox fx:id="titleBar" styleClass="title-bar,level-up-title-bar" alignment="CENTER_LEFT">
+        <Label text="Level Up Detected" styleClass="title-bar-label,level-up-title-label"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="✕" styleClass="window-btn,window-btn-close" onAction="#close" focusTraversable="false"/>
     </HBox>

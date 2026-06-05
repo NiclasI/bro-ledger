@@ -834,13 +834,39 @@
 .btn-led.led-lit.led-green  { -fx-background-color: #43a047; -fx-opacity: 1; -fx-effect: dropshadow(gaussian, #43a047, 5, 0.6, 0, 0); }
 .btn-led.led-lit.led-yellow { -fx-background-color: #d69f23; -fx-opacity: 1; -fx-effect: dropshadow(gaussian, #d69f23, 5, 0.6, 0, 0); }
 
-/* ===== Level-up modal scroll pane ===== */
+/* ===== Level-up modal ===== */
+
+.level-up-frame {
+    -fx-border-color: #d69f23;
+    -fx-border-width: 2;
+    -fx-background-color: #211608;
+    -fx-effect: dropshadow(gaussian, #d69f23, 24, 0.45, 0, 0);
+}
+
+.level-up-title-bar {
+    -fx-background-color: linear-gradient(to bottom, #6a3a12, #3e2008);
+    -fx-padding: 0 0 0 10;
+    -fx-spacing: 0;
+    -fx-pref-height: 32;
+    -fx-min-height: 32;
+    -fx-max-height: 32;
+    -fx-border-color: #d69f23;
+    -fx-border-width: 0 0 2 0;
+}
+
+.level-up-title-label {
+    -fx-text-fill: #f0c060;
+    -fx-font-family: 'Cinzel';
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(210,160,0,0.7), 8, 0.5, 0, 0);
+}
 
 .modal-scroll {
-    -fx-background-color: #1a1209;
-    -fx-background: #1a1209;
+    -fx-background-color: #211608;
+    -fx-background: #211608;
 }
 
 .modal-scroll > .viewport {
-    -fx-background-color: #1a1209;
+    -fx-background-color: #211608;
 }
