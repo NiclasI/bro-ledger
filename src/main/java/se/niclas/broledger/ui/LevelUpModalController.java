@@ -3,6 +3,8 @@ package se.niclas.broledger.ui;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -31,6 +33,14 @@ public class LevelUpModalController implements Initializable {
             Stage s = (Stage) titleBar.getScene().getWindow();
             s.setX(e.getScreenX() - dragOffsetX);
             s.setY(e.getScreenY() - dragOffsetY);
+        });
+
+        titleBar.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                newScene.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+                    if (e.getCode() == KeyCode.ESCAPE) { close(); e.consume(); }
+                });
+            }
         });
     }
 

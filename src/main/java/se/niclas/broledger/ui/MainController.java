@@ -19,6 +19,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -40,6 +41,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import se.niclas.broledger.model.Brother;
@@ -67,7 +69,8 @@ public class MainController implements Initializable {
     private ResizeEdge resizeEdge = ResizeEdge.NONE;
     private double resizeStartSX, resizeStartSY, resizeStartW, resizeStartH, resizeStartX, resizeStartY;
 
-    private final UiContext        uiCtx = UiContext.defaults();
+    private final UiContext        uiCtx    = UiContext.defaults();
+    private final HotkeyManager   hotkeys  = new HotkeyManager();
     private BrotherCardController cardController;
     private Node                  cardRoot;
     private boolean               showingOverview = false;
@@ -90,12 +93,12 @@ public class MainController implements Initializable {
 
         centerPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
-                newScene.getAccelerators().put(
-                        new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN),
-                        this::openSave);
-                newScene.getAccelerators().put(
-                        new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN),
-                        this::stopWatcher);
+                hotkeys.push("global", HotkeyManager.bindings(
+                        Map.entry(new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN), this::openSave),
+                        Map.entry(new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN), this::stopWatcher),
+                        Map.entry(new KeyCodeCombination(KeyCode.ESCAPE),                          this::navigateBack)
+                ));
+                hotkeys.register(newScene);
                 setupWindowControls(newScene);
             }
         });
@@ -287,6 +290,16 @@ public class MainController implements Initializable {
         centerPane.setContent(overview);
         showingOverview = true;
 
+        hotkeys.pop("detail");
+        hotkeys.push("overview", HotkeyManager.bindings(
+                Map.entry(new KeyCodeCombination(KeyCode.ENTER), () -> {
+                    if (selectedBrother != null) {
+                        showCard();
+                        if (cardController != null) cardController.populate(selectedBrother);
+                    }
+                })
+        ));
+
         if (overviewButtonsBox != null) {
             overviewButtonsBox.setVisible(true);
             overviewButtonsBox.setManaged(true);
@@ -297,10 +310,19 @@ public class MainController implements Initializable {
         if (cardRoot != null) centerPane.setContent(cardRoot);
         showingOverview = false;
 
+        hotkeys.pop("overview");
+        hotkeys.push("detail", HotkeyManager.bindings(
+                Map.entry(new KeyCodeCombination(KeyCode.ESCAPE), this::showOverview)
+        ));
+
         if (overviewButtonsBox != null) {
             overviewButtonsBox.setVisible(false);
             overviewButtonsBox.setManaged(false);
         }
+    }
+
+    private void navigateBack() {
+        if (!showingOverview && !brothers.isEmpty()) showOverview();
     }
 
     @FXML
