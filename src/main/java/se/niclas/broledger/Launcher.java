@@ -1,5 +1,8 @@
 package se.niclas.broledger;
 
+import java.io.InputStream;
+import java.util.logging.LogManager;
+
 /**
  * Fat-JAR entry point.
  *
@@ -15,6 +18,14 @@ package se.niclas.broledger;
  */
 public class Launcher {
     public static void main(String[] args) {
+        // When running via `javafx:run`, -Djava.util.logging.config.file is set and
+        // JUL has already loaded logging.properties from disk. For the fat JAR there
+        // is no such flag, so we load the bundled copy from the classpath instead.
+        if (System.getProperty("java.util.logging.config.file") == null) {
+            try (InputStream is = Launcher.class.getResourceAsStream("/logging.properties")) {
+                if (is != null) LogManager.getLogManager().readConfiguration(is);
+            } catch (Exception ignored) {}
+        }
         App.main(args);
     }
 }

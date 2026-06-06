@@ -38,13 +38,30 @@ public class ImageMapService {
     }
 
     public void loadFromClasspath() throws IOException {
-        try (InputStream is = ImageMapService.class
-                .getResourceAsStream("/se/niclas/broledger/data/image-map.json")) {
-            if (is == null) throw new IOException("image-map.json not found in classpath");
-            load(is);
-        }
+        GameDataService gds = GameDataService.getInstance();
+        gds.loadFromClasspath();
+        loadFromGameData(gds.getEntries(), gds.getImageSlots());
     }
 
+    /**
+     * Populates all maps from the unified game-data structure.
+     * All five maps come verbatim from the {@code imageSlots} node:
+     * {@code hexDirect} (hex ID → archive src path) and the four
+     * composite-key slot maps.
+     */
+    void loadFromGameData(JsonNode entriesNode, JsonNode imageSlotsNode) {
+        ObjectMapper mapper = new ObjectMapper();
+        hexDirect      = toMap(mapper, imageSlotsNode != null ? imageSlotsNode.get("hexDirect")      : null);
+        slotIcon       = toMap(mapper, imageSlotsNode != null ? imageSlotsNode.get("slotIcon")       : null);
+        slotHexIcon    = toMap(mapper, imageSlotsNode != null ? imageSlotsNode.get("slotHexIcon")    : null);
+        slotHexHouse   = toMap(mapper, imageSlotsNode != null ? imageSlotsNode.get("slotHexHouse")   : null);
+        slotAttachment = toMap(mapper, imageSlotsNode != null ? imageSlotsNode.get("slotAttachment") : null);
+    }
+
+    /**
+     * Loads from an {@code InputStream} in the legacy image-map.json format
+     * ({@code {hexDirect:{…}, slotIcon:{…}, …}}). Used as a testing seam.
+     */
     public void load(InputStream json) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(json);

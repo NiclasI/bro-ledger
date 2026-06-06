@@ -52,6 +52,7 @@ import se.niclas.broledger.service.AnnotationService.LevelUpEvent;
 import se.niclas.broledger.service.AppConfig;
 import se.niclas.broledger.service.DictionaryService;
 import se.niclas.broledger.service.FileWatcherService;
+import se.niclas.broledger.service.SaveReplayService;
 import se.niclas.broledger.tools.BrotherCsvExporter;
 import se.niclas.broledger.tools.parser.BrotherSavefileExporter;
 
@@ -63,6 +64,7 @@ public class MainController implements Initializable {
     @FXML private HBox       toolbarPane;
     @FXML private Label      statusLabel;
     @FXML private ScrollPane centerPane;
+    @FXML private Label      versionLabel;
 
     private double dragOffsetX, dragOffsetY;
     private enum ResizeEdge { NONE, N, S, E, W, NE, NW, SE, SW }
@@ -88,6 +90,7 @@ public class MainController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        versionLabel.setText(readVersion());
         buildToolbar();
         loadCardFxml();
 
@@ -417,6 +420,8 @@ public class MainController implements Initializable {
         task.setOnSucceeded(e -> {
             applyResult(parser, task.getValue());
             showOverview();
+            // Capture baseline snapshot so ReplayAnalyzer has a predecessor for the first overwrite.
+            SaveReplayService.getInstance().capture(savePath);
             startWatching(savePath);
         });
         task.setOnFailed(e -> showError("Failed to parse save file", task.getException().getMessage()));
@@ -442,6 +447,8 @@ public class MainController implements Initializable {
         watchStatusLabel.setText("Watching");
         watcher.watch(savePath, () -> {
             AnnotationService.getInstance().loadFor(savePath);
+            // Capture the save + pre-reconciliation annotations BEFORE reconcileOnReload mutates them.
+            SaveReplayService.getInstance().capture(savePath);
             loadSaveQuiet(savePath);
         });
     }
@@ -496,7 +503,6 @@ public class MainController implements Initializable {
     private void applyResult(SaveParser parser, List<Brother> parsed) {
         brothers = parsed.stream().sorted(BrotherOverviewPane.sortComparator(uiCtx)).toList();
         showWarnings(parser.getWarnings());
-        if (cardController != null) cardController.setAllBrothers(brothers);
     }
 
     static boolean isValid(Brother b) {
@@ -613,6 +619,7 @@ public class MainController implements Initializable {
             Parent root = loader.load();
             RoleManagerController ctrl = loader.getController();
             ctrl.setOnRolesChanged(this::onRolesChanged);
+            ctrl.setUiContext(UiContext.defaults());
 
             Stage stage = new Stage();
             stage.initStyle(javafx.stage.StageStyle.UNDECORATED);
@@ -722,6 +729,18 @@ public class MainController implements Initializable {
                 statusLabel.getStyleClass().add("warning");
         } else {
             statusLabel.getStyleClass().remove("warning");
+        }
+    }
+
+    private static String readVersion() {
+        try (var in = MainController.class.getResourceAsStream("/se/niclas/broledger/version.properties")) {
+            if (in == null) return "";
+            var props = new java.util.Properties();
+            props.load(in);
+            String v = props.getProperty("version", "");
+            return v.isBlank() ? "" : "v" + v;
+        } catch (Exception e) {
+            return "";
         }
     }
 

@@ -107,7 +107,7 @@ class Phase4ResourcesTest {
         List<String> required = Arrays.asList(
             "portraitView", "nameLabel", "titleLabel", "backgroundLabel",
             "traitsPane", "roleCombo", "statsGrid",
-            "perksPane", "equipmentPane",
+            "perkPlanContainer", "equipmentPane",
             "armorLabel", "fatigueLabel", "damageLabel"
         );
         for (String id : required) {

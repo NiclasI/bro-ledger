@@ -30,6 +30,7 @@ public class SetupController implements Initializable {
     private static final Logger log = Logger.getLogger(SetupController.class.getName());
 
     @FXML private HBox        titleBar;
+    @FXML private Label       headerLabel;
     @FXML private TextField   datPathField;
     @FXML private TextField   outDirField;
     @FXML private ProgressBar progressBar;
@@ -180,5 +181,13 @@ public class SetupController implements Initializable {
 
     public void setOnConfigured(Runnable callback) {
         this.onConfigured = callback;
+    }
+
+    /** Call before showing the dialog when the existing game-art is outdated. */
+    public void setOutdated(boolean outdated) {
+        if (outdated) {
+            headerLabel.setText(
+                "Game-art is outdated and needs to be re-extracted. Choose an option:");
+        }
     }
 }

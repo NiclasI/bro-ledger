@@ -2,6 +2,7 @@ package se.niclas.broledger.ui;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
@@ -24,6 +25,7 @@ public class PreferencesController implements Initializable {
     @FXML private RadioButton lvlAutoCloseRadio;
     @FXML private RadioButton lvlOffRadio;
     @FXML private ToggleGroup lvlModalGroup;
+    @FXML private CheckBox    replayCaptureCheck;
 
     private double dragOffsetX, dragOffsetY;
     private Runnable onChanged;
@@ -86,6 +88,13 @@ public class PreferencesController implements Initializable {
             } else {
                 AppConfig.getInstance().levelUpModalMode = "MODAL";
             }
+            AppConfig.getInstance().save();
+        });
+
+        // Initialize update-replay capture setting
+        replayCaptureCheck.setSelected(AppConfig.getInstance().replayCaptureEnabled);
+        replayCaptureCheck.selectedProperty().addListener((obs, old, selected) -> {
+            AppConfig.getInstance().replayCaptureEnabled = selected;
             AppConfig.getInstance().save();
         });
     }

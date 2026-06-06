@@ -6,7 +6,9 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import se.niclas.broledger.model.PerkPlanStatus;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -168,49 +170,74 @@ public class TooltipFactory {
             List<ExpectedStatsCalculator.PriorityEntry> entries, int remaining) {
         Tooltip t = new Tooltip();
         t.getStyleClass().add("item-tooltip");
-        t.setGraphic(guideContent(entries, remaining));
+        t.setGraphic(guideContent(entries, remaining, null, null));
         return t;
     }
 
+    /**
+     * Plain data record for a planned perk row in the guide popup.
+     * Nodes are built lazily inside {@link #guideContent} to avoid allocation during list scrolling.
+     */
+    public record PlannedPerkEntry(String hexId, PerkPlanStatus status, String name) {}
+
     static VBox guideContent(
-            List<ExpectedStatsCalculator.PriorityEntry> entries, int remaining) {
+            List<ExpectedStatsCalculator.PriorityEntry> entries, int remaining,
+            List<PlannedPerkEntry> plannedPerks, UiContext ctx) {
         VBox root = new VBox(4);
         root.getStyleClass().add("priority-guide-tooltip");
 
-        Label header = new Label("Roll Priority Guide  (" + remaining + " levels remaining)");
-        header.getStyleClass().add("priority-guide-header");
-        root.getChildren().add(header);
+        if (entries != null && !entries.isEmpty()) {
+            Label header = new Label("Roll Priority Guide  (" + remaining + " levels remaining)");
+            header.getStyleClass().add("priority-guide-header");
+            root.getChildren().add(header);
 
-        boolean hadFixed = false;
-        boolean hadFlex  = false;
-        for (ExpectedStatsCalculator.PriorityEntry e : entries) {
-            if (e.fixed() && !hadFixed) {
-                Label sec = new Label("Always pick:");
-                sec.getStyleClass().add("priority-guide-section");
-                root.getChildren().add(sec);
-                hadFixed = true;
+            boolean hadFixed = false;
+            boolean hadFlex  = false;
+            for (ExpectedStatsCalculator.PriorityEntry e : entries) {
+                if (e.fixed() && !hadFixed) {
+                    Label sec = new Label("Always pick:");
+                    sec.getStyleClass().add("priority-guide-section");
+                    root.getChildren().add(sec);
+                    hadFixed = true;
+                }
+                if (!e.fixed() && !hadFlex) {
+                    Label sec = new Label("Pick by roll outcome (higher = better):");
+                    sec.getStyleClass().add("priority-guide-section");
+                    root.getChildren().add(sec);
+                    hadFlex = true;
+                }
+                HBox row = new HBox(6);
+                row.setAlignment(Pos.CENTER_LEFT);
+                ImageView icon = statIcon(e.stat());
+                Label name = new Label(e.stat().displayName());
+                name.getStyleClass().add("priority-guide-name");
+                row.getChildren().addAll(icon, name);
+                if (!e.fixed()) {
+                    Label roll = new Label(String.valueOf(e.rollValue()));
+                    roll.getStyleClass().add("priority-guide-roll");
+                    Label dev = new Label(String.format("%+.1f", e.deviation()));
+                    dev.getStyleClass().add(e.deviation() >= 0 ? "priority-guide-dev-pos"
+                                                                : "priority-guide-dev-neg");
+                    row.getChildren().addAll(roll, dev);
+                }
+                root.getChildren().add(row);
             }
-            if (!e.fixed() && !hadFlex) {
-                Label sec = new Label("Pick by roll outcome (higher = better):");
-                sec.getStyleClass().add("priority-guide-section");
-                root.getChildren().add(sec);
-                hadFlex = true;
+        }
+
+        if (plannedPerks != null && !plannedPerks.isEmpty() && ctx != null) {
+            Label sec = new Label("Planned perks (next pick):");
+            sec.getStyleClass().add("perk-plan-section");
+            root.getChildren().add(sec);
+            for (PlannedPerkEntry pe : plannedPerks) {
+                StackPane icon = PerkPlanPane.buildStatusIcon(ctx, pe.hexId(), pe.status(), 24, 14, 30);
+                HBox row = new HBox(6);
+                row.setAlignment(Pos.CENTER_LEFT);
+                row.getChildren().add(icon);
+                Label nameLbl = new Label(pe.name());
+                nameLbl.getStyleClass().add("perk-plan-perk-name");
+                row.getChildren().add(nameLbl);
+                root.getChildren().add(row);
             }
-            HBox row = new HBox(6);
-            row.setAlignment(Pos.CENTER_LEFT);
-            ImageView icon = statIcon(e.stat());
-            Label name = new Label(e.stat().displayName());
-            name.getStyleClass().add("priority-guide-name");
-            row.getChildren().addAll(icon, name);
-            if (!e.fixed()) {
-                Label roll = new Label(String.valueOf(e.rollValue()));
-                roll.getStyleClass().add("priority-guide-roll");
-                Label dev = new Label(String.format("%+.1f", e.deviation()));
-                dev.getStyleClass().add(e.deviation() >= 0 ? "priority-guide-dev-pos"
-                                                            : "priority-guide-dev-neg");
-                row.getChildren().addAll(roll, dev);
-            }
-            root.getChildren().add(row);
         }
 
         return root;

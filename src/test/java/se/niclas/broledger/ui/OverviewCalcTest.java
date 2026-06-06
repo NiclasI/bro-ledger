@@ -29,6 +29,25 @@ class OverviewCalcTest {
         assertEquals(6, OverviewCalc.sumOrZero(new int[]{1, 2, 3}));
     }
 
+    // ---- allWithinCap --------------------------------------------------------
+
+    @Test
+    void allWithinCap_nullArray() {
+        assertTrue(OverviewCalc.allWithinCap(null, 5));
+    }
+
+    @Test
+    void allWithinCap_trueWhenAllFit() {
+        assertTrue(OverviewCalc.allWithinCap(new int[]{1, 5, 0, 5}, 5));
+    }
+
+    @Test
+    void allWithinCap_falseWhenOneExceeds() {
+        // Sum can match the total budget while one entry alone exceeds the per-stat cap —
+        // e.g. a stale allocation left over from a temporarily higher budget.
+        assertFalse(OverviewCalc.allWithinCap(new int[]{10, 5, 0, 0}, 5));
+    }
+
     // ---- levelBudget -------------------------------------------------------
 
     @Test

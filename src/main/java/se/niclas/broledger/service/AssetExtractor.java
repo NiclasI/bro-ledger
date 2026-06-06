@@ -1,6 +1,6 @@
 package se.niclas.broledger.service;
 
-import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -17,6 +17,8 @@ public class AssetExtractor {
 
     private static final Logger log = Logger.getLogger(AssetExtractor.class.getName());
 
+    private static final String VERSION_FILE = "game-art-version.json";
+
     public record ExtractionResult(int total, int extracted, int missing, int fallback) {}
 
     @FunctionalInterface
@@ -24,27 +26,26 @@ public class AssetExtractor {
         void onProgress(int done, int total, String currentFile);
     }
 
-    private static final Map<String, String> PATTERN_MAP = new LinkedHashMap<>();
-    static {
-        PATTERN_MAP.put("gfx/ui/items/accessory/",      "accessory");
-        PATTERN_MAP.put("gfx/ui/items/ammo/",           "ammo");
-        PATTERN_MAP.put("gfx/ui/items/armor/",          "armor");
-        PATTERN_MAP.put("gfx/ui/items/armor_upgrades/", "armor-upgrades");
-        PATTERN_MAP.put("gfx/ui/backgrounds/",          "backgrounds");
-        PATTERN_MAP.put("gfx/ui/items/consumables/",    "consumables");
-        PATTERN_MAP.put("gfx/ui/items/helmets/",        "helmets");
-        PATTERN_MAP.put("gfx/ui/injury/",               "injury");
-        PATTERN_MAP.put("gfx/ui/items/loot/",           "loot");
-        PATTERN_MAP.put("gfx/ui/items/misc/",           "misc");
-        PATTERN_MAP.put("gfx/ui/perks/",                "perks");
-        PATTERN_MAP.put("gfx/ui/items/shields/",        "shields");
-        PATTERN_MAP.put("gfx/skills/",                  "skills");
-        PATTERN_MAP.put("gfx/ui/items/supplies/",       "supplies");
-        PATTERN_MAP.put("gfx/ui/items/tools/",          "tools");
-        PATTERN_MAP.put("gfx/ui/items/trade/",          "trade");
-        PATTERN_MAP.put("gfx/ui/traits/",               "traits");
-        PATTERN_MAP.put("gfx/ui/items/weapons/",        "weapons");
-    }
+    private static final Set<String> PATTERN_PREFIXES = new LinkedHashSet<>(List.of(
+        "gfx/ui/items/accessory/",
+        "gfx/ui/items/ammo/",
+        "gfx/ui/items/armor/",
+        "gfx/ui/items/armor_upgrades/",
+        "gfx/ui/backgrounds/",
+        "gfx/ui/items/consumables/",
+        "gfx/ui/items/helmets/",
+        "gfx/ui/injury/",
+        "gfx/ui/items/loot/",
+        "gfx/ui/items/misc/",
+        "gfx/ui/perks/",
+        "gfx/ui/items/shields/",
+        "gfx/skills/",
+        "gfx/ui/items/supplies/",
+        "gfx/ui/items/tools/",
+        "gfx/ui/items/trade/",
+        "gfx/ui/traits/",
+        "gfx/ui/items/weapons/"
+    ));
 
     public ExtractionResult extractMapped(Path datFile, Path outDir, ProgressListener listener)
             throws IOException {
@@ -52,6 +53,7 @@ public class AssetExtractor {
         try (ZipFile zf = new ZipFile(datFile.toFile(), StandardCharsets.UTF_8)) {
             Map<String, String> mapped = doExtractMapped(zf, outDir, fileMap, listener);
             int missing = fileMap.size() - mapped.size();
+            writeVersionFile(outDir);
             return new ExtractionResult(fileMap.size(), mapped.size(), missing, 0);
         }
     }
@@ -72,6 +74,7 @@ public class AssetExtractor {
             Map<String, String> mapped = doExtractMapped(zf, outDir, fileMap, phase1Listener);
             List<String> fallback = doExtractFallback(zf, outDir, new HashSet<>(mapped.keySet()), entries, phase2Listener);
             int missing = fileMap.size() - mapped.size();
+            writeVersionFile(outDir);
             return new ExtractionResult(fileMap.size(), mapped.size(), missing, fallback.size());
         }
     }
@@ -84,20 +87,19 @@ public class AssetExtractor {
         int done = 0;
         for (Map.Entry<String, String> entry : fileMap.entrySet()) {
             String src = entry.getKey();
-            String dst = entry.getValue();
             var zipEntry = zf.getEntry(src);
             String label;
             if (zipEntry == null) {
                 log.warning("Archive missing: " + src);
                 label = "[missing] " + src;
             } else {
-                Path target = outDir.resolve(dst);
+                Path target = outDir.resolve(src);
                 Files.createDirectories(target.getParent());
                 try (InputStream is = zf.getInputStream(zipEntry)) {
                     Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
                 }
-                mapped.put(src, dst);
-                label = dst;
+                mapped.put(src, src);
+                label = src;
             }
             done++;
             if (listener != null) listener.onProgress(done, total, label);
@@ -114,31 +116,85 @@ public class AssetExtractor {
         for (var entry : entries) {
             done++;
             String name = entry.getName();
-            if (alreadyMapped.contains(name)) { continue; }
-            if (!name.toLowerCase(Locale.ROOT).endsWith(".png")) { continue; }
-            for (Map.Entry<String, String> pattern : PATTERN_MAP.entrySet()) {
-                if (name.contains(pattern.getKey())) {
-                    String sub = pattern.getValue();
-                    String basename = Path.of(name).getFileName().toString();
-                    Path target = outDir.resolve(sub).resolve(basename);
-                    Files.createDirectories(target.getParent());
-                    try (InputStream is = zf.getInputStream(entry)) {
-                        Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
-                    }
-                    fallback.add(name);
-                    if (listener != null) listener.onProgress(done, entries.size(), sub + "/" + basename);
-                    break;
-                }
+            if (alreadyMapped.contains(name)) continue;
+            if (!name.toLowerCase(Locale.ROOT).endsWith(".png")) continue;
+            boolean relevant = false;
+            for (String prefix : PATTERN_PREFIXES) {
+                if (name.contains(prefix)) { relevant = true; break; }
             }
+            if (!relevant) continue;
+            Path target = outDir.resolve(name);
+            Files.createDirectories(target.getParent());
+            try (InputStream is = zf.getInputStream(entry)) {
+                Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+            fallback.add(name);
+            if (listener != null) listener.onProgress(done, entries.size(), name);
         }
         return fallback;
     }
 
     private Map<String, String> loadAssetMap() throws IOException {
-        try (InputStream is = AssetExtractor.class
-                .getResourceAsStream("/se/niclas/broledger/data/asset-map.json")) {
-            if (is == null) throw new IOException("asset-map.json not found in classpath");
-            return new ObjectMapper().readValue(is, new TypeReference<Map<String, String>>() {});
+        GameDataService gds = GameDataService.getInstance();
+        gds.loadFromClasspath();
+
+        // All paths to extract are the union of values across all imageSlots sub-maps.
+        Set<String> paths = new LinkedHashSet<>();
+        JsonNode imageSlotsNode = gds.getImageSlots();
+        if (!imageSlotsNode.isMissingNode() && imageSlotsNode.isObject()) {
+            for (JsonNode subMap : imageSlotsNode) {
+                if (!subMap.isObject()) continue;
+                for (JsonNode value : subMap) {
+                    if (value.isTextual()) paths.add(value.asText());
+                }
+            }
+        }
+
+        Map<String, String> result = new LinkedHashMap<>();
+        paths.forEach(src -> result.put(src, src));
+        return result;
+    }
+
+    /**
+     * Returns true if the game-art directory's version file is missing or older
+     * than the version declared in game-data.json.
+     */
+    public static boolean isGameArtOutdated(Path gameArtDir) {
+        if (gameArtDir == null || !Files.isDirectory(gameArtDir)) return false;
+        try {
+            GameDataService gds = GameDataService.getInstance();
+            gds.loadFromClasspath();
+            int expected = gds.getGameArtVersion();
+            int actual = readExtractedVersion(gameArtDir);
+            return actual < expected;
+        } catch (Exception e) {
+            log.warning("Could not check game-art version: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private static int readExtractedVersion(Path gameArtDir) {
+        Path versionFile = gameArtDir.resolve(VERSION_FILE);
+        if (!Files.exists(versionFile)) return -1;
+        try {
+            JsonNode node = new ObjectMapper().readTree(versionFile.toFile());
+            return node.path("version").asInt(-1);
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    private void writeVersionFile(Path outDir) {
+        try {
+            GameDataService gds = GameDataService.getInstance();
+            gds.loadFromClasspath();
+            int version = gds.getGameArtVersion();
+            Path versionFile = outDir.resolve(VERSION_FILE);
+            Files.createDirectories(outDir);
+            new ObjectMapper().writerWithDefaultPrettyPrinter()
+                    .writeValue(versionFile.toFile(), Map.of("version", version));
+        } catch (Exception e) {
+            log.warning("Could not write version file: " + e.getMessage());
         }
     }
 }

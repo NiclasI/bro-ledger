@@ -47,6 +47,18 @@ public final class OverviewCalc {
         return arr == null ? 0 : Arrays.stream(arr).sum();
     }
 
+    /**
+     * True when every entry fits within {@code cap}. A stat can reach the sum-matching
+     * total (e.g. via a temporarily higher cap while a Gifted perk was planned) while a
+     * single stat still exceeds the current cap — that stale state must not be treated
+     * as a valid, fully-allocated budget.
+     */
+    static boolean allWithinCap(int[] arr, int cap) {
+        if (arr == null) return true;
+        for (int v : arr) if (v > cap) return false;
+        return true;
+    }
+
     // ---- budget state & formatting ----------------------------------------
 
     enum BudgetState { UNDER, EXACT, OVER }

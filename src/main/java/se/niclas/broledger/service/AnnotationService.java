@@ -3,6 +3,7 @@ package se.niclas.broledger.service;
 import se.niclas.broledger.model.Brother;
 import se.niclas.broledger.model.BrotherAnnotation;
 import se.niclas.broledger.model.Stat;
+import se.niclas.broledger.util.HexUtils;
 import java.util.Collections;
 import java.util.EnumMap;
 import tools.jackson.databind.DeserializationFeature;
@@ -12,13 +13,10 @@ import tools.jackson.databind.json.JsonMapper;
 import java.util.logging.Logger;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,6 +99,12 @@ public class AnnotationService {
         flush();
     }
 
+    /** Store the per-brother perk plan (hex ID → "OPTIONAL"|"PLANNED"). Null or empty = clear plan. */
+    public void setPerkPlanStatus(String fingerprint, java.util.Map<String, String> status) {
+        get(fingerprint).perkPlanStatus = (status == null || status.isEmpty()) ? null : new java.util.LinkedHashMap<>(status);
+        flush();
+    }
+
     public UiState getUiState() { return uiState; }
 
     public void setUiState(UiState state) {
@@ -147,10 +151,11 @@ public class AnnotationService {
             for (var entry : store.entrySet()) {
                 BrotherAnnotation a = entry.getValue();
                 AnnotationsFile.AnnotationEntry ae = new AnnotationsFile.AnnotationEntry();
-                ae.roleId         = a.roleId;
-                ae.sortIndex      = a.sortIndex;
-                ae.statIncreases  = a.statIncreases;
+                ae.roleId          = a.roleId;
+                ae.sortIndex       = a.sortIndex;
+                ae.statIncreases   = a.statIncreases;
                 ae.post11Increases = a.post11Increases;
+                ae.perkPlanStatus  = (a.perkPlanStatus == null || a.perkPlanStatus.isEmpty()) ? null : a.perkPlanStatus;
                 file.annotations.put(entry.getKey(), ae);
             }
             MAPPER.writerWithDefaultPrettyPrinter().writeValue(dest.toFile(), file);
@@ -170,6 +175,7 @@ public class AnnotationService {
                     a.sortIndex       = ae.sortIndex;
                     a.statIncreases   = ae.statIncreases;
                     a.post11Increases = ae.post11Increases;
+                    a.perkPlanStatus  = (ae.perkPlanStatus == null || ae.perkPlanStatus.isEmpty()) ? null : ae.perkPlanStatus;
                     store.put(fp, a);
                 });
             }
@@ -197,6 +203,7 @@ public class AnnotationService {
             public Integer sortIndex;
             public int[]   statIncreases;
             public int[]   post11Increases;
+            public java.util.Map<String, String> perkPlanStatus;
         }
     }
 
@@ -386,15 +393,102 @@ public class AnnotationService {
         );
     }
 
+    // ---- non-destructive preview reconciliation (for ReplayAnalyzer) -------
+
+    /**
+     * Non-persisting reconciliation for the replay tool.
+     * Identical in logic to {@link #reconcileOnReload} but reads planned/post-11
+     * increases from the supplied maps and writes updated values back into them —
+     * no store access, no disk I/O.
+     *
+     * @param plannedByFp  mutable map fingerprint → statIncreases (updated in place)
+     * @param post11ByFp   mutable map fingerprint → post11Increases (updated in place)
+     */
+    public List<LevelUpEvent> previewReconcile(
+            List<Brother> oldList, List<Brother> newList,
+            Map<String, int[]> plannedByFp,
+            Map<String, int[]> post11ByFp) {
+
+        List<LevelUpEvent> events = new ArrayList<>();
+        for (Brother nb : newList) {
+            if (nb.fingerprint == null) continue;
+            Brother ob = findMatch(oldList, nb.fingerprint);
+            if (ob == null) continue;
+            LevelUpEvent e = previewReconcileBrother(ob, nb, plannedByFp, post11ByFp);
+            if (e != null) events.add(e);
+        }
+        return events;
+    }
+
+    private static LevelUpEvent previewReconcileBrother(
+            Brother ob, Brother nb,
+            Map<String, int[]> plannedByFp,
+            Map<String, int[]> post11ByFp) {
+
+        String fp = nb.fingerprint;
+        List<String> addedPerkIds   = addedPerks(ob, nb);
+        boolean levelPointsDecreased = nb.levelPoints < ob.levelPoints;
+        boolean giftedSelected       = addedPerkIds.contains(GIFTED_PERK_ID);
+
+        if (!levelPointsDecreased && addedPerkIds.isEmpty()) return null;
+
+        int levels               = levelsAssigned(ob, nb, giftedSelected);
+        Map<Stat, Integer> deltas = statDeltas(ob, nb);
+        boolean post11            = levelPointsDecreased && isPost11Reconcile(ob, nb);
+        Reconciliation r;
+
+        if (post11) {
+            BrotherAnnotation a = new BrotherAnnotation(fp);
+            a.post11Increases = post11ByFp.get(fp);
+            r = reconcilePost11(a, deltas);
+            if (r.changed()) post11ByFp.put(fp, r.updatedPost11Increases());
+        } else if (levelPointsDecreased || giftedSelected) {
+            BrotherAnnotation a = new BrotherAnnotation(fp);
+            a.statIncreases = plannedByFp.get(fp);
+            r = consumePlannedIncreases(a, nb, deltas);
+            if (r.changed()) plannedByFp.put(fp, r.updatedStatIncreases());
+        } else {
+            r = new Reconciliation(List.of(), Map.of(), null, null, false);
+        }
+
+        return new LevelUpEvent(
+                nb.name,
+                r.changed(),
+                levels,
+                Collections.unmodifiableMap(deltas),
+                r.adjustedStats(),
+                r.consumedIncreases(),
+                Collections.unmodifiableList(addedPerkIds),
+                post11
+        );
+    }
+
+    /**
+     * Reads planned and post-11 stat increases from a {@code .broledger.json} file into the
+     * supplied maps. Silently does nothing if the path is null, absent, or unreadable.
+     * Intended for use by {@link se.niclas.broledger.tools.ReplayAnalyzer}.
+     */
+    public static void readAnnotationMaps(
+            Path annotPath,
+            Map<String, int[]> plannedByFp,
+            Map<String, int[]> post11ByFp) {
+
+        if (annotPath == null || !Files.exists(annotPath)) return;
+        try {
+            AnnotationsFile file = MAPPER.readValue(annotPath.toFile(), AnnotationsFile.class);
+            if (file.annotations == null) return;
+            file.annotations.forEach((fp, ae) -> {
+                if (ae.statIncreases  != null) plannedByFp.put(fp, ae.statIncreases.clone());
+                if (ae.post11Increases != null) post11ByFp.put(fp, ae.post11Increases.clone());
+            });
+        } catch (Exception ignored) {
+            // Unreadable snapshot annotations → leave maps empty (no planned increases known)
+        }
+    }
+
     // ---- utility -----------------------------------------------------------
 
     private static String sha256hex(String input) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hash = md.digest(input.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hash);
-        } catch (Exception e) {
-            return Integer.toHexString(input.hashCode());
-        }
+        return HexUtils.sha256Hex(input);
     }
 }

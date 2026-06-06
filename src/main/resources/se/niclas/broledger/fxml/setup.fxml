@@ -25,7 +25,8 @@
     <VBox spacing="16" VBox.vgrow="ALWAYS">
         <padding><Insets top="20" right="24" bottom="24" left="24"/></padding>
 
-        <Label text="No game-art directory is configured. Choose an option:"
+        <Label fx:id="headerLabel"
+               text="No game-art directory is configured. Choose an option:"
                styleClass="stat-label" wrapText="true"/>
 
         <!-- Extract from game data -->

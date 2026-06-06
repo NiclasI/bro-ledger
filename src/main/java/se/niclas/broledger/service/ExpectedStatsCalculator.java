@@ -392,7 +392,7 @@ public final class ExpectedStatsCalculator {
         }
 
         int baseExpected;
-        if (mode == Mode.GREEDY && isFullyAllocated(increases, remaining)) {
+        if (mode == Mode.GREEDY && isFullyAllocated(increases, remaining) && withinRemaining(increases, remaining)) {
             baseExpected = greedyBase(b, stat, increases, currentBase, remaining);
         } else {
             baseExpected = naiveBase(b, stat, currentBase, count);
@@ -411,9 +411,12 @@ public final class ExpectedStatsCalculator {
      * @return int[8] increase allocations indexed by {@link Stat#ordinal()}, summing to 3×remaining
      */
     public static int[] autoAssignByRole(Brother b, Role role) {
-        int remaining = remainingLevels(b);
-        if (remaining == 0 || role == null) return new int[N];
-        return allocateByRoleTiers(role.priority, remaining);
+        return autoAssignByRole(role, remainingLevels(b));
+    }
+
+    public static int[] autoAssignByRole(Role role, int effectiveRemaining) {
+        if (effectiveRemaining == 0 || role == null) return new int[N];
+        return allocateByRoleTiers(role.priority, effectiveRemaining);
     }
 
     /**
@@ -532,6 +535,18 @@ public final class ExpectedStatsCalculator {
         int sum = 0;
         for (int v : increases) sum += v;
         return sum == 3 * remaining;
+    }
+
+    /**
+     * True when every per-stat count fits within {@code remaining}. A stale allocation can
+     * exceed it — e.g. rolls assigned while a pending Gifted perk temporarily raised the
+     * budget, then the perk plan was reverted — which would otherwise crash the greedy
+     * algorithm's internal validation.
+     */
+    private static boolean withinRemaining(int[] increases, int remaining) {
+        if (increases == null) return true;
+        for (int v : increases) if (v > remaining) return false;
+        return true;
     }
 
     public static class TooManyFlexibleStatsException extends Exception {

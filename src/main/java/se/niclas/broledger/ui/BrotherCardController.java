@@ -31,13 +31,12 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class BrotherCardController implements Initializable {
 
@@ -58,6 +57,8 @@ public class BrotherCardController implements Initializable {
     private static final String[] SLOT_NAMES = {
         "weapon", "shield", "body", "helmet", "trinket", "quiver", "pouch"
     };
+
+    private static final String GIFTED_HEX_ID = "9899E380";
 
     // Grid layout constants
     private static final int STAT_HEADER_ROW       = 0;
@@ -84,9 +85,11 @@ public class BrotherCardController implements Initializable {
     @FXML private GridPane        statsGrid;
     private Label                 increasesRemainingLabel;
     @FXML private Button          autoAssignBtn;
-    @FXML private FlowPane   perksPane;
-    @FXML private Button     perkSortBtn;
     @FXML private Label      perkPointsLabel;
+    @FXML private Label      perkPlanBadgeLabel;
+    @FXML private Button     clearPlanBtn;
+    @FXML private Button     initPlanBtn;
+    @FXML private VBox       perkPlanContainer;
     @FXML private HBox       equipmentPane;
     @FXML private Label      armorLabel;
     @FXML private Label      fatigueLabel;
@@ -95,8 +98,7 @@ public class BrotherCardController implements Initializable {
     private final UiContext ctx;
     private Runnable onBack;
     private Brother currentBrother;
-    private List<Brother> allBrothers = List.of();
-    private List<javafx.scene.Node> originalPerkOrder = new ArrayList<>();
+    private PerkPlanPane perkPlanPane;
     private final List<Role> extraRoles = new ArrayList<>();
     private int maxExtras = 0;
     private Label persistentRoleHeader;
@@ -112,6 +114,7 @@ public class BrotherCardController implements Initializable {
     private final Map<Integer, Button>              incMinusBtns        = new HashMap<>();
     private final Map<Integer, Label>               targetLabels        = new HashMap<>();
     private final Map<Integer, Map<Integer, Label>> extraTargetsByRow   = new HashMap<>();
+    private int[] lastStatDisplayOrder;
 
     public BrotherCardController(UiContext ctx) {
         this.ctx = ctx;
@@ -123,8 +126,7 @@ public class BrotherCardController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         backBtn.setOnAction(e -> { if (onBack != null) onBack.run(); });
         buildStatRows();
-        buildPerksPane();
-        setupPerkSortButton();
+        buildPerkPlanPane();
         setupRoleCombo();
         setupRoleButtons();
         setupWidthWatcher();
@@ -174,22 +176,22 @@ public class BrotherCardController implements Initializable {
                 ? ctx.annotation().get(b.fingerprint).roleId : null;
         roleCombo.setValue(roleId != null ? ctx.roles().getById(roleId) : null);
 
-        // 4. Stats
+        // 4. Stats — rebuild rows if the user has reordered stat columns since last build
+        if (!Arrays.equals(computeStatDisplayOrder(), lastStatDisplayOrder)) {
+            buildStatRows();
+            rebuildExtraColumns();
+        }
         updateStatValues(b);
 
-        // 5. Perks — update opacity and unspent badge
-        updatePerkOpacity(b);
-        if (b.perkPoints > 0) {
-            perkPointsLabel.setText("(+" + b.perkPoints + " unspent)");
-            perkPointsLabel.setVisible(true);
-            perkPointsLabel.setManaged(true);
-            Tooltip tip = new Tooltip(b.perkPoints + " perk point(s) available\nbut not yet spent in-game.");
-            tip.getStyleClass().add("item-tooltip");
-            Tooltip.install(perkPointsLabel, tip);
-        } else {
-            perkPointsLabel.setVisible(false);
-            perkPointsLabel.setManaged(false);
-        }
+        // 5. Perks — update perk plan pane and badges
+        Map<String, String> planStatus = b.fingerprint != null
+                ? ctx.annotation().get(b.fingerprint).perkPlanStatus : null;
+        perkPlanPane.setOwnedPerks(Set.copyOf(b.perkIds));
+        perkPlanPane.setStatus(planStatus);
+        updateInitPlanBtn(b);
+        updateClearPlanBtn(planStatus);
+        updatePerkBadges(planStatus);
+        updatePerkPointsBadge(b);
 
         // 6. Equipment
         buildEquipmentPane(b);
@@ -200,16 +202,10 @@ public class BrotherCardController implements Initializable {
         damageLabel.setText("Damage: " + ArmorCalculator.weaponDamageRange(b));
     }
 
-    /** Called by MainController after a new save is loaded so COMMONALITY counts are up to date. */
-    public void setAllBrothers(List<Brother> brothers) {
-        allBrothers = brothers != null ? brothers : List.of();
-        PerkSortMode mode = BrotherOverviewPane.perkSortMode.get();
-        if (mode == PerkSortMode.COMMONALITY || mode == PerkSortMode.TIER_THEN_COMMON) resortPerks();
-    }
-
     // ---- initialization (once) --------------------------------------------
 
     private void buildStatRows() {
+        lastStatDisplayOrder = computeStatDisplayOrder();
         statsGrid.getChildren().clear();
         starsByRow.clear();
         valLabels.clear();
@@ -317,13 +313,15 @@ public class BrotherCardController implements Initializable {
             statsGrid.getChildren().add(hdr);
         }
 
-        // Header row: increases-remaining label above the editor column
+        // Header row: checkbox + budget label stacked above the editor column
         increasesRemainingLabel = new Label();
         increasesRemainingLabel.getStyleClass().add("increases-remaining-label");
         increasesRemainingLabel.setAlignment(Pos.CENTER);
-        GridPane.setRowIndex(increasesRemainingLabel, STAT_HEADER_ROW);
-        GridPane.setColumnIndex(increasesRemainingLabel, INCREASE_EDITOR_COL);
-        statsGrid.getChildren().add(increasesRemainingLabel);
+        VBox increaseHeader = new VBox(2, increasesRemainingLabel);
+        increaseHeader.setAlignment(Pos.CENTER);
+        GridPane.setRowIndex(increaseHeader, STAT_HEADER_ROW);
+        GridPane.setColumnIndex(increaseHeader, INCREASE_EDITOR_COL);
+        statsGrid.getChildren().add(increaseHeader);
 
         // Header row: role name for the persistent column (no dropdown — that lives above the grid)
         persistentRoleHeader = new Label("");
@@ -342,60 +340,60 @@ public class BrotherCardController implements Initializable {
         return result;
     }
 
-    private void buildPerksPane() {
-        perksPane.getChildren().clear();
-        List<Map.Entry<String, DictionaryEntry>> allPerks =
-                ctx.dict().getAllByType("perk");
-        for (Map.Entry<String, DictionaryEntry> e : allPerks) {
-            String hexId = e.getKey();
+    private void buildPerkPlanPane() {
+        perkPlanPane = new PerkPlanPane(ctx);
+        perkPlanPane.setOnChange(newStatus -> {
+            Brother b = currentBrother;
+            if (b == null || b.fingerprint == null) return;
+            Map<String, String> mutable = new LinkedHashMap<>(newStatus);
+            ctx.annotation().setPerkPlanStatus(b.fingerprint, mutable);
+            updatePerkBadges(mutable.isEmpty() ? null : mutable);
+            updateClearPlanBtn(mutable);
+            updateInitPlanBtn(b);
+            refreshIncreaseUi();
+        });
+        perkPlanContainer.getChildren().add(perkPlanPane);
 
-            ImageView iv = new ImageView(loadHexImage(hexId));
-            iv.setFitWidth(40);
-            iv.setFitHeight(40);
-            iv.setPreserveRatio(true);
-            iv.setOpacity(0.3);
-            iv.setUserData("perk-" + hexId);
-            Tooltip.install(iv, TooltipFactory.forHex(hexId));
-            perksPane.getChildren().add(iv);
-        }
-        originalPerkOrder = new ArrayList<>(perksPane.getChildren());
-    }
+        clearPlanBtn.setOnAction(e -> {
+            Brother b = currentBrother;
+            if (b == null || b.fingerprint == null) return;
+            ctx.annotation().setPerkPlanStatus(b.fingerprint, null);
+            perkPlanPane.setStatus(null);
+            updatePerkBadges(null);
+            updateClearPlanBtn(null);
+            updateInitPlanBtn(b);
+            refreshIncreaseUi();
+        });
 
-    private void setupPerkSortButton() {
-        perkSortBtn.setText(BrotherOverviewPane.perkSortMode.get().label);
-        perkSortBtn.setOnAction(e ->
-                BrotherOverviewPane.perkSortMode.set(BrotherOverviewPane.perkSortMode.get().next()));
-        BrotherOverviewPane.perkSortMode.addListener((obs, old, newMode) -> {
-            perkSortBtn.setText(newMode.label);
-            resortPerks();
+        initPlanBtn.setOnAction(e -> {
+            Brother b = currentBrother;
+            if (b == null || b.fingerprint == null) return;
+            Role role = resolveRole(b);
+            Map<String, String> template = (role != null) ? role.perkPlanTemplate : null;
+            Map<String, String> newPlan = (template != null) ? new LinkedHashMap<>(template) : new LinkedHashMap<>();
+            ctx.annotation().setPerkPlanStatus(b.fingerprint, newPlan);
+            perkPlanPane.setStatus(newPlan);
+            updatePerkBadges(newPlan.isEmpty() ? null : newPlan);
+            updateClearPlanBtn(newPlan.isEmpty() ? null : newPlan);
+            updateInitPlanBtn(b);
+            refreshIncreaseUi();
         });
     }
 
-    private void resortPerks() {
-        PerkSortMode perkSortMode = BrotherOverviewPane.perkSortMode.get();
-        if (perkSortMode == PerkSortMode.OFF) {
-            perksPane.getChildren().setAll(originalPerkOrder);
-            return;
-        }
-        Map<String, Long> counts = perkSortMode == PerkSortMode.TIER
-                ? java.util.Map.of()
-                : allBrothers.stream()
-                        .flatMap(br -> br.perkIds.stream())
-                        .collect(Collectors.groupingBy(String::toUpperCase, Collectors.counting()));
+    // ---- per-brother updates -----------------------------------------------
 
-        Comparator<String> hexComp = OverviewCalc.perkComparator(
-                perkSortMode,
-                id -> OverviewCalc.tierOrMax(ctx.statModifier().getTier(id)),
-                id -> counts.getOrDefault(id.toUpperCase(), 0L),
-                ctx.dict()::getName);
-
-        List<javafx.scene.Node> sorted = new ArrayList<>(originalPerkOrder);
-        sorted.sort(Comparator.comparing(
-                node -> ((String) node.getUserData()).substring(5), hexComp));
-        perksPane.getChildren().setAll(sorted);
+    private boolean hasGiftedPerk(Brother b) {
+        return b.perkIds.stream().anyMatch(id -> GIFTED_HEX_ID.equalsIgnoreCase(id));
     }
 
-    // ---- per-brother updates -----------------------------------------------
+    /** True when Gifted is PLANNED in the perk plan and not yet owned. */
+    private boolean isGiftedPending(Brother b) {
+        if (b == null || hasGiftedPerk(b)) return false;
+        if (b.fingerprint == null) return false;
+        java.util.Map<String, String> plan = ctx.annotation().get(b.fingerprint).perkPlanStatus;
+        if (plan == null) return false;
+        return "PLANNED".equals(plan.get(GIFTED_HEX_ID));
+    }
 
     private void buildTraitsPane(Brother b) {
         traitsPane.getChildren().clear();
@@ -485,11 +483,12 @@ public class BrotherCardController implements Initializable {
         } else {
             int remaining = ExpectedStatsCalculator.remainingLevels(b);
             if (remaining == 0) return;
+            int cap     = remaining + (isGiftedPending(b) ? 1 : 0);
             int[] increases = ctx.annotation().get(b.fingerprint).statIncreases;
             increases = increases == null ? new int[STAT_ROWS.length] : Arrays.copyOf(increases, STAT_ROWS.length);
             int current = increases[canonIdx];
-            int free    = 3 * remaining - OverviewCalc.sumOrZero(increases);
-            if (!OverviewCalc.canApplyIncrease(delta, current, remaining, free)) return;
+            int free    = 3 * cap - OverviewCalc.sumOrZero(increases);
+            if (!OverviewCalc.canApplyIncrease(delta, current, cap, free)) return;
             increases[canonIdx] = current + delta;
             ctx.annotation().setStatIncreases(b.fingerprint, increases);
         }
@@ -508,8 +507,10 @@ public class BrotherCardController implements Initializable {
                 ? ctx.annotation().get(b.fingerprint).post11Increases : null;
         if (post11inc == null) post11inc = new int[STAT_ROWS.length];
 
+        int remainingLevels = ExpectedStatsCalculator.remainingLevels(b);
+        int giftedBonus     = (remainingLevels > 0 && isGiftedPending(b)) ? 1 : 0;
         OverviewCalc.LevelBudget lb = OverviewCalc.levelBudget(
-                b.levelTotal, ExpectedStatsCalculator.remainingLevels(b),
+                b.levelTotal, remainingLevels + giftedBonus,
                 increases, post11inc);
         int cap   = lb.cap();
         int total = lb.used();
@@ -723,7 +724,8 @@ public class BrotherCardController implements Initializable {
                 int[] post11 = ExpectedStatsCalculator.autoAssignPost11ByRole(b, role);
                 ctx.annotation().setPost11Increases(b.fingerprint, post11);
             } else {
-                int[] increases = ExpectedStatsCalculator.autoAssignByRole(b, role);
+                int effective = ExpectedStatsCalculator.remainingLevels(b) + (isGiftedPending(b) ? 1 : 0);
+                int[] increases = ExpectedStatsCalculator.autoAssignByRole(role, effective);
                 ctx.annotation().setStatIncreases(b.fingerprint, increases);
             }
             refreshIncreaseUi();
@@ -748,14 +750,57 @@ public class BrotherCardController implements Initializable {
         rebuildExtraColumns();
     }
 
-    private void updatePerkOpacity(Brother b) {
-        Set<String> owned = Set.copyOf(b.perkIds);
-        for (var node : perksPane.getChildren()) {
-            Object tag = node.getUserData();
-            if (tag == null || !tag.toString().startsWith("perk-")) continue;
-            String hexId = tag.toString().substring(5);
-            node.setOpacity(owned.contains(hexId) ? 1.0 : 0.3);
+    private void updatePerkPointsBadge(Brother b) {
+        if (b.perkPoints > 0) {
+            perkPointsLabel.setText("(+" + b.perkPoints + " unspent)");
+            perkPointsLabel.setVisible(true);
+            perkPointsLabel.setManaged(true);
+            Tooltip tip = new Tooltip(b.perkPoints + " perk point(s) available\nbut not yet spent in-game.");
+            tip.getStyleClass().add("item-tooltip");
+            Tooltip.install(perkPointsLabel, tip);
+        } else {
+            perkPointsLabel.setVisible(false);
+            perkPointsLabel.setManaged(false);
         }
+    }
+
+    private void updatePerkBadges(Map<String, String> planStatus) {
+        long planned  = planStatus == null ? 0 : planStatus.values().stream().filter("PLANNED"::equals).count();
+        long optional = planStatus == null ? 0 : planStatus.values().stream().filter("OPTIONAL"::equals).count();
+        if (planned == 0 && optional == 0) {
+            perkPlanBadgeLabel.setVisible(false);
+            perkPlanBadgeLabel.setManaged(false);
+        } else {
+            perkPlanBadgeLabel.setText("P: " + planned + "  ·  O: " + optional);
+            perkPlanBadgeLabel.setManaged(true);
+            perkPlanBadgeLabel.setVisible(true);
+        }
+    }
+
+    private void updateClearPlanBtn(Map<String, String> planStatus) {
+        boolean hasPlan = planStatus != null && !planStatus.isEmpty();
+        clearPlanBtn.setVisible(hasPlan);
+        clearPlanBtn.setManaged(hasPlan);
+    }
+
+    private void updateInitPlanBtn(Brother b) {
+        if (b == null || b.fingerprint == null) {
+            initPlanBtn.setVisible(false);
+            initPlanBtn.setManaged(false);
+            return;
+        }
+        Role role = resolveRole(b);
+        boolean roleHasTemplate = role != null && role.perkPlanTemplate != null && !role.perkPlanTemplate.isEmpty();
+        if (!roleHasTemplate) {
+            initPlanBtn.setVisible(false);
+            initPlanBtn.setManaged(false);
+            return;
+        }
+        Map<String, String> existing = ctx.annotation().get(b.fingerprint).perkPlanStatus;
+        boolean hasPlan = existing != null && !existing.isEmpty();
+        initPlanBtn.setText(hasPlan ? "Reset to role template" : "Init plan from role");
+        initPlanBtn.setVisible(true);
+        initPlanBtn.setManaged(true);
     }
 
     private void buildEquipmentPane(Brother b) {
@@ -814,11 +859,11 @@ public class BrotherCardController implements Initializable {
         roleCombo.getItems().setAll(ctx.roles().getAll());
         roleCombo.valueProperty().addListener((obs, oldRole, newRole) -> {
             persistentRoleHeader.setText(newRole != null ? newRole.name : "");
-            applyPersistentTargetColumn();
             Brother b = currentBrother;
             if (b != null && b.fingerprint != null) {
                 ctx.annotation().setRole(b.fingerprint, newRole != null ? newRole.id : null);
             }
+            applyPersistentTargetColumn();
         });
     }
 

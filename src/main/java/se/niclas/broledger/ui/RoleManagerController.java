@@ -7,6 +7,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import se.niclas.broledger.model.Role;
 import se.niclas.broledger.model.Stat;
@@ -14,6 +15,8 @@ import se.niclas.broledger.service.AppConfig;
 import se.niclas.broledger.service.RoleService;
 
 import java.net.URL;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
@@ -26,12 +29,16 @@ public class RoleManagerController implements Initializable {
     @FXML private RadioButton     backlineRadio;
     @FXML private ToggleGroup     positionGroup;
     @FXML private GridPane        statEditorGrid;
+    @FXML private VBox            perkPlanContainer;
 
     private final TextField[]   targetFields = new TextField[8];
     private final ToggleGroup[] prioGroups   = new ToggleGroup[8];
 
+    private PerkPlanPane perkPlanPane;
+
     private double dragOffsetX, dragOffsetY;
     private Runnable onRolesChanged;
+    private UiContext uiContext;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -67,10 +74,28 @@ public class RoleManagerController implements Initializable {
 
         refreshList(null);
         setFormDisabled(true);
+
+        // Build the perk plan pane with default singletons; MainController may call
+        // setUiContext() afterwards to supply the same context — that is a no-op.
+        setUiContext(UiContext.defaults());
     }
 
     public void setOnRolesChanged(Runnable callback) {
         this.onRolesChanged = callback;
+    }
+
+    public void setUiContext(UiContext ctx) {
+        this.uiContext = ctx;
+        if (perkPlanPane != null) return; // pane already built; singletons are the same
+        perkPlanPane = new PerkPlanPane(ctx);
+        perkPlanPane.setOnChange(newStatus -> {
+            Role selected = roleList.getSelectionModel().getSelectedItem();
+            if (selected == null) return;
+            selected.perkPlanTemplate = newStatus.isEmpty() ? null : new LinkedHashMap<>(newStatus);
+            RoleService.getInstance().update(selected);
+            notifyChanged();
+        });
+        perkPlanContainer.getChildren().add(perkPlanPane);
     }
 
     // ---- FXML actions ------------------------------------------------------
@@ -212,6 +237,10 @@ public class RoleManagerController implements Initializable {
                     .findFirst()
                     .ifPresent(prioGroups[i]::selectToggle);
         }
+
+        if (perkPlanPane != null) {
+            perkPlanPane.setStatus(r.perkPlanTemplate);
+        }
     }
 
     private void setFormDisabled(boolean disabled) {
@@ -222,6 +251,7 @@ public class RoleManagerController implements Initializable {
             targetFields[i].setDisable(disabled);
             prioGroups[i].getToggles().forEach(t -> ((ToggleButton) t).setDisable(disabled));
         }
+        if (perkPlanPane != null) perkPlanPane.setDisable(disabled);
         if (disabled) {
             nameField.clear();
             frontlineRadio.setSelected(true);
@@ -229,6 +259,7 @@ public class RoleManagerController implements Initializable {
                 targetFields[i].clear();
                 prioGroups[i].selectToggle(prioGroups[i].getToggles().get(2)); // P3
             }
+            if (perkPlanPane != null) perkPlanPane.setStatus(null);
         }
     }
 

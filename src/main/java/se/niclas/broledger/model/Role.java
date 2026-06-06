@@ -12,6 +12,9 @@ public class Role {
     // Per-stat priority: 1=P1, 2=P2, 3=P3 (default). StatOrder indexing.
     public int[] priority = new int[]{3, 3, 3, 3, 3, 3, 3, 3};
 
+    // Perk plan template: hex ID → "OPTIONAL" | "PLANNED". Null/absent = NOT. Null map = no template.
+    public java.util.Map<String, String> perkPlanTemplate;
+
     public Role() {}
 
     @Override

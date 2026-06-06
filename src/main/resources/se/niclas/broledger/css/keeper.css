@@ -25,6 +25,14 @@
     -fx-font-weight: bold;
 }
 
+.title-bar-version {
+    -fx-text-fill: #7a5c2a;
+    -fx-font-family: 'Cinzel';
+    -fx-font-size: 10px;
+    -fx-padding: 0 0 0 8;
+    -fx-translate-y: 1;
+}
+
 .window-btn {
     -fx-background-color: transparent;
     -fx-text-fill: #4a3820;
@@ -720,6 +728,51 @@
     -fx-background-radius: 5em;
 }
 
+.check-box,
+.pref-check {
+    -fx-text-fill: #d69f23;
+}
+
+.check-box .box,
+.pref-check .box {
+    -fx-background-color: #120d05;
+    -fx-border-color: #5a3a18;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+.check-box:hover .box,
+.pref-check:hover .box {
+    -fx-border-color: #ba9238;
+}
+
+.check-box:focused .box,
+.pref-check:focused .box {
+    -fx-border-color: #ba9238;
+}
+
+.check-box:selected .box,
+.pref-check:selected .box {
+    -fx-background-color: #3a2510;
+    -fx-border-color: #ba9238;
+}
+
+.check-box:selected .box .mark,
+.pref-check:selected .box .mark {
+    -fx-background-color: #d69f23;
+}
+
+.small-check {
+    -fx-font-size: 12px;
+}
+
+.small-check .box {
+    -fx-min-width: 12px;
+    -fx-min-height: 12px;
+    -fx-max-width: 12px;
+    -fx-max-height: 12px;
+}
+
 .prio-toggle {
     -fx-background-color: #1e1508;
     -fx-text-fill: #8a7040;
@@ -876,4 +929,51 @@
 
 .modal-scroll > .viewport {
     -fx-background-color: #211608;
+}
+
+/* ===== Perk plan ===== */
+
+.perk-status-circle.perk-status-optional {
+    -fx-fill: transparent;
+    -fx-stroke: #3a7ac8;
+    -fx-stroke-width: 2.5;
+}
+
+.perk-status-circle.perk-status-planned {
+    -fx-fill: transparent;
+    -fx-stroke: #3aaa5a;
+    -fx-stroke-width: 2.5;
+}
+
+.perk-plan-counter {
+    -fx-text-fill: #8a7040;
+    -fx-font-size: 11px;
+    -fx-padding: 0 0 2 2;
+}
+
+.perk-tier-label {
+    -fx-text-fill: #5a4820;
+    -fx-font-size: 10px;
+}
+
+.perk-plan-badge {
+    -fx-text-fill: #6aaa6a;
+    -fx-font-size: 11px;
+}
+
+.perk-plan-complete {
+    -fx-text-fill: #3aaa5a;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.perk-plan-section {
+    -fx-font-size: 11px;
+    -fx-text-fill: #aaaaaa;
+    -fx-padding: 6 0 2 0;
+}
+
+.perk-plan-perk-name {
+    -fx-font-size: 12px;
+    -fx-text-fill: #dddddd;
 }

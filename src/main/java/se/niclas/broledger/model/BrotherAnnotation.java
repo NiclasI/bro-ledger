@@ -9,6 +9,8 @@ public class BrotherAnnotation {
     public int[] statIncreases;
     /** Per-stat post-lv11 increases already taken (+1 each), indexed by Stat.ordinal(). Null = all zero. */
     public int[] post11Increases;
+    /** Per-brother perk plan: hex ID → "OPTIONAL" | "PLANNED". Null map = no plan set. */
+    public java.util.Map<String, String> perkPlanStatus;
 
     public BrotherAnnotation() {}
 

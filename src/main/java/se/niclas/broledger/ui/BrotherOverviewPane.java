@@ -15,6 +15,7 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.stage.Popup;
 import javafx.scene.image.Image;
@@ -422,14 +423,15 @@ public class BrotherOverviewPane {
             // Guide popup state
             private final Popup guidePopup = new Popup();
             private EventHandler<KeyEvent> escapeHandler = null;
+            private EventHandler<MouseEvent> appPressHandler = null;
             private List<ExpectedStatsCalculator.PriorityEntry> cachedEntries = null;
             private int cachedRemaining = 0;
+            private List<TooltipFactory.PlannedPerkEntry> cachedPlannedPerks = null;
             {
                 lvlLabel.getStyleClass().add("overview-stat-val");
                 allottedLabel.getStyleClass().add("level-allotted-label");
                 box.setAlignment(Pos.CENTER);
 
-                guidePopup.setAutoHide(true);
                 guidePopup.setAutoFix(true);
                 guidePopup.setOnShown(e -> {
                     if (box.getScene() != null) {
@@ -440,22 +442,42 @@ public class BrotherOverviewPane {
                             }
                         };
                         box.getScene().addEventFilter(KeyEvent.KEY_PRESSED, escapeHandler);
+                        // Close on any in-app press (excluding the cell itself, whose
+                        // MOUSE_CLICKED handler already toggles the guide).
+                        appPressHandler = me -> {
+                            javafx.scene.Node t = me.getPickResult() != null
+                                    ? me.getPickResult().getIntersectedNode() : null;
+                            boolean onCell = false;
+                            while (t != null) { if (t == box) { onCell = true; break; } t = t.getParent(); }
+                            if (!onCell) guidePopup.hide();
+                        };
+                        box.getScene().addEventFilter(MouseEvent.MOUSE_PRESSED, appPressHandler);
                     }
                 });
                 guidePopup.setOnHidden(e -> {
-                    if (escapeHandler != null && box.getScene() != null) {
-                        box.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, escapeHandler);
-                        escapeHandler = null;
+                    if (box.getScene() != null) {
+                        if (escapeHandler != null) {
+                            box.getScene().removeEventFilter(KeyEvent.KEY_PRESSED, escapeHandler);
+                            escapeHandler = null;
+                        }
+                        if (appPressHandler != null) {
+                            box.getScene().removeEventFilter(MouseEvent.MOUSE_PRESSED, appPressHandler);
+                            appPressHandler = null;
+                        }
                     }
                 });
 
                 box.setOnMouseClicked(e -> {
                     if (e.getButton() != MouseButton.PRIMARY) return;
-                    if (cachedEntries == null) return;
+                    boolean hasContent = cachedEntries != null
+                            || (cachedPlannedPerks != null && !cachedPlannedPerks.isEmpty());
+                    if (!hasContent) return;
                     if (guidePopup.isShowing()) {
                         guidePopup.hide();
                     } else {
-                        javafx.scene.Node content = TooltipFactory.guideContent(cachedEntries, cachedRemaining);
+                        javafx.scene.Node content = TooltipFactory.guideContent(
+                                cachedEntries, cachedRemaining, cachedPlannedPerks, ctx);
+                        content.setOnMousePressed(ev -> guidePopup.hide());
                         guidePopup.getContent().setAll(content);
                         javafx.geometry.Bounds bounds = box.localToScreen(box.getBoundsInLocal());
                         if (bounds != null)
@@ -503,16 +525,27 @@ public class BrotherOverviewPane {
                         allottedLabel.getStyleClass().add("level-allotted-green");
                 }
 
-                // Guide popup vs. plain tooltip
-                if (usedBudget == totalBudget && increases != null
-                        && budget.cap() > 0 && !budget.post11()) {
-                    // Guide is available — use sticky popup, no tooltip
+                // Build planned perks for popup when perk picks are available
+                cachedPlannedPerks = b.perkPoints > 0 ? buildPlannedPerkEntries(b) : null;
+
+                boolean guideReady = usedBudget == totalBudget && increases != null
+                        && budget.cap() > 0 && !budget.post11()
+                        && OverviewCalc.allWithinCap(increases, budget.cap());
+                boolean hasPlanned = cachedPlannedPerks != null && !cachedPlannedPerks.isEmpty();
+
+                if (guideReady || hasPlanned) {
+                    // Use sticky popup
                     setTooltip(null);
                     guidePopup.hide();
-                    cachedEntries  = buildGuideEntries(b, budget.cap(), increases);
-                    cachedRemaining = budget.cap();
+                    if (guideReady) {
+                        cachedEntries   = buildGuideEntries(b, budget.cap(), increases);
+                        cachedRemaining = budget.cap();
+                    } else {
+                        cachedEntries   = null;
+                        cachedRemaining = 0;
+                    }
                 } else {
-                    // Guide not applicable — clear popup data, use plain tooltip
+                    // Plain tooltip — no popup content
                     cachedEntries = null;
                     guidePopup.hide();
                     if (b.levelTotal == 11 || budget.cap() == 0) {
@@ -537,6 +570,7 @@ public class BrotherOverviewPane {
                 super.updateItem(b, empty);
                 guidePopup.hide();
                 cachedEntries = null;
+                cachedPlannedPerks = null;
                 if (empty || b == null) { cachedBrother = null; setGraphic(null); return; }
                 cachedBrother = b;
                 lvlLabel.setText(String.valueOf(b.levelTotal));
@@ -566,6 +600,41 @@ public class BrotherOverviewPane {
                             Math.min(role.priority.length, priority.length));
                 return ExpectedStatsCalculator.rollPriorityGuideEntries(
                         remaining, stars, rolls, priority);
+            }
+
+            private List<TooltipFactory.PlannedPerkEntry> buildPlannedPerkEntries(Brother b) {
+                if (b.fingerprint == null) return List.of();
+                Map<String, String> plan = ctx.annotation().get(b.fingerprint).perkPlanStatus;
+                if (plan == null || plan.isEmpty()) return List.of();
+
+                Set<String> owned = new HashSet<>(b.perkIds);
+                int tierCap = b.perkUsed + 1; // next pick tier ceiling
+
+                // Collect eligible: unowned, in plan, tier <= tierCap
+                // Sort: PLANNED before OPTIONAL, then alphabetical by name
+                List<TooltipFactory.PlannedPerkEntry> result = new ArrayList<>();
+                plan.entrySet().stream()
+                        .filter(e -> !owned.contains(e.getKey()))
+                        .filter(e -> "PLANNED".equals(e.getValue()) || "OPTIONAL".equals(e.getValue()))
+                        .filter(e -> {
+                            Integer tier = ctx.statModifier().getTier(e.getKey());
+                            return tier != null && tier <= tierCap;
+                        })
+                        .sorted(Comparator.<Map.Entry<String, String>, Integer>comparing(
+                                        e -> "PLANNED".equals(e.getValue()) ? 0 : 1)
+                                .thenComparing(e -> {
+                                    String n = ctx.dict().getName(e.getKey());
+                                    return n != null ? n.toLowerCase() : "";
+                                }))
+                        .forEach(e -> {
+                            String hexId = e.getKey();
+                            String name  = ctx.dict().getName(hexId);
+                            if (name == null) name = hexId;
+                            se.niclas.broledger.model.PerkPlanStatus status =
+                                    se.niclas.broledger.model.PerkPlanStatus.fromString(e.getValue());
+                            result.add(new TooltipFactory.PlannedPerkEntry(hexId, status, name));
+                        });
+                return result;
             }
         });
         return col;

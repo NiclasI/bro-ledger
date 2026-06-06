@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
@@ -11,15 +12,24 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import se.niclas.broledger.service.AppConfig;
+import se.niclas.broledger.service.AssetExtractor;
+import se.niclas.broledger.ui.SetupController;
 import se.niclas.broledger.service.DictionaryService;
 import se.niclas.broledger.service.ImageMapService;
 import se.niclas.broledger.service.StatModifierService;
 import se.niclas.broledger.service.WeaponStatsService;
-import se.niclas.broledger.ui.SetupController;
 
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class App extends Application {
 
@@ -27,6 +37,7 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
+        setupFileLogging();
         AppConfig config = AppConfig.getInstance();
         config.load();
 
@@ -50,6 +61,8 @@ public class App extends Application {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         }
 
+        Image icon = new Image(App.class.getResourceAsStream("/se/niclas/broledger/assets/BroLedger.png"));
+        stage.getIcons().add(icon);
         stage.setTitle("Bro Ledger");
         stage.setMinWidth(1100);
         stage.setMinHeight(900);
@@ -80,8 +93,21 @@ public class App extends Application {
         stage.show();
     }
 
+    /**
+     * Called by JavaFX on every exit path (including force-quit and implicit-exit
+     * when the last window closes without a WINDOW_CLOSE_REQUEST event).
+     * Re-saves config so window geometry is never lost even when the close handler
+     * is bypassed.
+     */
+    @Override
+    public void stop() {
+        AppConfig.getInstance().save();
+    }
+
     private static void promptForGameArtIfNeeded(Stage owner, AppConfig config) {
-        if (config.hasGameArtDirectory()) return;
+        boolean noGameArt = !config.hasGameArtDirectory();
+        boolean outdated  = !noGameArt && AssetExtractor.isGameArtOutdated(config.gameArtRoot());
+        if (!noGameArt && !outdated) return;
 
         try {
             URL fxml = App.class.getResource("/se/niclas/broledger/fxml/setup.fxml");
@@ -96,6 +122,8 @@ public class App extends Application {
 
             FXMLLoader loader = new FXMLLoader(fxml);
             Parent root = loader.load();
+            SetupController ctrl = loader.getController();
+            ctrl.setOutdated(outdated);
 
             Stage dialog = new Stage();
             dialog.initStyle(StageStyle.UNDECORATED);
@@ -115,5 +143,22 @@ public class App extends Application {
 
     public static void main(String[] args) {
         launch(args);
+    }
+
+    private static void setupFileLogging() {
+        if (!"true".equalsIgnoreCase(LogManager.getLogManager().getProperty("log.file.enabled"))) return;
+        try {
+            Path logDir = Path.of(System.getProperty("user.home"), ".bro-ledger", "logs");
+            Files.createDirectories(logDir);
+            String ts = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now());
+            Path logFile = logDir.resolve("bro-ledger-" + ts + ".log");
+            FileHandler fh = new FileHandler(logFile.toString());
+            fh.setLevel(Level.ALL);
+            fh.setFormatter(new SimpleFormatter());
+            Logger.getLogger("se.niclas.broledger").addHandler(fh);
+            log.info("Logging to file: " + logFile);
+        } catch (Exception e) {
+            log.warning("Could not set up file logging: " + e.getMessage());
+        }
     }
 }

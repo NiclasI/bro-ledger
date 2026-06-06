@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.ToggleGroup?>
@@ -50,6 +51,13 @@
                 <RadioButton fx:id="lvlOffRadio" text="Off" styleClass="role-radio"
                              toggleGroup="$lvlModalGroup"/>
             </HBox>
+        </VBox>
+
+        <!-- Update Replay -->
+        <VBox spacing="8" styleClass="card-section">
+            <Label text="Update Replay" styleClass="section-header"/>
+            <Label text="Saves a copy of the save file and planned stat increases before each overwrite. Run ReplayAnalyzer to inspect the captured sequence and detect reconciliation errors." styleClass="stat-label" wrapText="true"/>
+            <CheckBox fx:id="replayCaptureCheck" text="Enable capture on overwrite (stored in ~/.bro-ledger/replay/)" styleClass="pref-check"/>
         </VBox>
 
         <Region VBox.vgrow="ALWAYS"/>

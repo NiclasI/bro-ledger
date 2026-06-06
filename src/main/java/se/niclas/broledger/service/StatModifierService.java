@@ -4,7 +4,9 @@ import se.niclas.broledger.model.Brother;
 import se.niclas.broledger.model.Stat;
 import se.niclas.broledger.model.StatModifier;
 import se.niclas.broledger.model.TraitEntry;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -40,13 +42,38 @@ public class StatModifierService {
     }
 
     public void loadFromClasspath() throws IOException {
-        try (InputStream is = StatModifierService.class
-                .getResourceAsStream("/se/niclas/broledger/data/traits_perks.json")) {
-            if (is == null) throw new IOException("traits_perks.json not found in classpath");
-            loadFromStream(is);
-        }
+        GameDataService gds = GameDataService.getInstance();
+        gds.loadFromClasspath();
+        loadFromEntries(gds.getEntries());
     }
 
+    /**
+     * Populates from the {@code entries} node of game-data.json.
+     * Only entries that carry a {@code modifier} sub-object are loaded.
+     */
+    void loadFromEntries(JsonNode entriesNode) {
+        byHexId.clear();
+        if (entriesNode == null || entriesNode.isMissingNode()) return;
+        Map<String, JsonNode> entryMap = MAPPER.convertValue(
+                entriesNode, new TypeReference<Map<String, JsonNode>>() {});
+        entryMap.forEach((key, node) -> {
+            JsonNode modNode = node.get("modifier");
+            if (modNode == null || modNode.isMissingNode()) return;
+            try {
+                StatModifier mod = MAPPER.treeToValue(modNode, StatModifier.class);
+                mod.hexId = key.toUpperCase();
+                byHexId.put(mod.hexId, mod);
+            } catch (Exception ex) {
+                throw new RuntimeException("Failed to parse modifier entry " + key, ex);
+            }
+        });
+    }
+
+    /**
+     * Loads from an {@code InputStream} in the legacy
+     * {@code {modifiers:[{hexId,tier,effects,description}]} } format.
+     * Used as a testing seam for unit tests that inject inline JSON.
+     */
     void loadFromStream(InputStream is) throws IOException {
         Wrapper w = MAPPER.readValue(is, Wrapper.class);
         byHexId.clear();

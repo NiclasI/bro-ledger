@@ -64,10 +64,13 @@
     <VBox spacing="6" styleClass="card-section">
         <HBox spacing="8" alignment="CENTER_LEFT">
             <Label text="Perks" styleClass="section-header"/>
-            <Button fx:id="perkSortBtn" styleClass="overview-potential-toggle"/>
             <Label fx:id="perkPointsLabel" styleClass="level-pending-badge" visible="false" managed="false"/>
+            <Label fx:id="perkPlanBadgeLabel" styleClass="perk-plan-badge" visible="false" managed="false"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="clearPlanBtn" text="Clear" styleClass="overview-potential-toggle" visible="false" managed="false"/>
+            <Button fx:id="initPlanBtn" styleClass="overview-potential-toggle" visible="false" managed="false"/>
         </HBox>
-        <FlowPane fx:id="perksPane" hgap="6" vgap="6"/>
+        <VBox fx:id="perkPlanContainer"/>
     </VBox>
 
     <!-- 6. Equipment (populated programmatically) -->

@@ -3,6 +3,7 @@ package se.niclas.broledger.service;
 import tools.jackson.core.StreamReadFeature;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 import se.niclas.broledger.model.WeaponStats;
@@ -30,6 +31,10 @@ public class WeaponStatsService {
         return instance;
     }
 
+    /**
+     * Loads from an {@code InputStream} in the legacy
+     * {@code {hexId: {weaponClass,…}} } format. Used as a testing seam.
+     */
     public void load(InputStream json) throws IOException {
         Map<String, WeaponStats> raw = mapper.readValue(json,
                 new TypeReference<Map<String, WeaponStats>>() {});
@@ -37,11 +42,29 @@ public class WeaponStatsService {
     }
 
     public void loadFromClasspath() throws IOException {
-        try (InputStream is = WeaponStatsService.class
-                .getResourceAsStream("/se/niclas/broledger/data/weapon-stats.json")) {
-            if (is == null) throw new IOException("weapon-stats.json not found in classpath");
-            load(is);
-        }
+        GameDataService gds = GameDataService.getInstance();
+        gds.loadFromClasspath();
+        loadFromEntries(gds.getEntries());
+    }
+
+    /**
+     * Populates this service from the {@code entries} node of game-data.json.
+     * Only entries that carry a {@code weapon} sub-object are loaded.
+     */
+    void loadFromEntries(JsonNode entriesNode) {
+        if (entriesNode == null || entriesNode.isMissingNode()) return;
+        Map<String, JsonNode> entryMap = mapper.convertValue(
+                entriesNode, new TypeReference<Map<String, JsonNode>>() {});
+        entryMap.forEach((key, node) -> {
+            JsonNode weapon = node.get("weapon");
+            if (weapon == null || weapon.isMissingNode()) return;
+            try {
+                WeaponStats ws = mapper.treeToValue(weapon, WeaponStats.class);
+                entries.put(key.toUpperCase(), ws);
+            } catch (Exception ex) {
+                throw new RuntimeException("Failed to parse weapon entry " + key, ex);
+            }
+        });
     }
 
     public WeaponStats get(String hexId) {

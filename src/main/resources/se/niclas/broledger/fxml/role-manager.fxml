@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.GridPane?>
@@ -13,7 +14,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.Region?>
 
-<VBox styleClass="app-frame" minWidth="820" minHeight="500"
+<VBox styleClass="app-frame" minWidth="820" minHeight="620"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="se.niclas.broledger.ui.RoleManagerController">
 
@@ -62,9 +63,18 @@
             </HBox>
 
             <!-- Attributes (populated programmatically) -->
-            <VBox spacing="6" styleClass="card-section" VBox.vgrow="ALWAYS">
+            <VBox spacing="6" styleClass="card-section">
                 <Label text="Attributes" styleClass="section-header"/>
                 <GridPane fx:id="statEditorGrid" hgap="12" vgap="6"/>
+            </VBox>
+
+            <!-- Perk Plan (populated programmatically) -->
+            <VBox spacing="4" styleClass="card-section" VBox.vgrow="ALWAYS">
+                <Label text="Perk Plan" styleClass="section-header"/>
+                <ScrollPane fx:id="perkPlanScrollPane" fitToWidth="true" VBox.vgrow="ALWAYS"
+                            styleClass="modal-scroll" hbarPolicy="NEVER">
+                    <VBox fx:id="perkPlanContainer"/>
+                </ScrollPane>
             </VBox>
 
             <!-- Buttons -->

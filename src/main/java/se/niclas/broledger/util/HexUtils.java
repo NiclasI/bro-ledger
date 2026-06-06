@@ -2,6 +2,9 @@ package se.niclas.broledger.util;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 
 public final class HexUtils {
 
@@ -71,5 +74,20 @@ public final class HexUtils {
     /** Converts a byte count to the equivalent number of hex characters (byteCount × 2). */
     public static int hexCharSpan(int byteCount) {
         return byteCount * 2;
+    }
+
+    /**
+     * Returns the SHA-256 digest of the UTF-8–encoded {@code input} as a lowercase hex string.
+     * Falls back to {@link Integer#toHexString(int)} on the unlikely JVM error where SHA-256
+     * is unavailable.
+     */
+    public static String sha256Hex(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(input.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (Exception e) {
+            return Integer.toHexString(input.hashCode());
+        }
     }
 }

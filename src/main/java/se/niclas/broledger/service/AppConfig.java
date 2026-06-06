@@ -1,10 +1,14 @@
 package se.niclas.broledger.service;
 
 import se.niclas.broledger.model.Stat;
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -20,9 +24,14 @@ public class AppConfig {
     private static final Path CONFIG_FILE = CONFIG_DIR.resolve("config.json");
 
     private static final Logger log = Logger.getLogger(AppConfig.class.getName());
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = JsonMapper.builder()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
 
     private static AppConfig instance;
+    /** Overrides CONFIG_FILE during tests so save()/load() never touch ~/.bro-ledger/config.json. */
+    static Path configFileForTest;
+
 
     // Public fields — read/write freely, then call save().
     public String       lastSaveFilePath;
@@ -38,6 +47,12 @@ public class AppConfig {
     public String expectedStatsMode = "NAIVE";
     /** Level-up modal behaviour: "MODAL" (default), "AUTO_CLOSE" (15 s), or "OFF". */
     public String levelUpModalMode = "MODAL";
+    /**
+     * When true, the app captures a timestamped copy of the save file (plus the current
+     * planned-increase annotations) into {@code ~/.bro-ledger/replay/<hash>/} before each
+     * overwrite is reconciled. Disabled by default. Use ReplayAnalyzer to inspect the sequence.
+     */
+    public boolean replayCaptureEnabled = false;
 
     private AppConfig() {}
 
@@ -48,41 +63,59 @@ public class AppConfig {
 
     /** Load from the default config file; silently falls back to defaults if absent. */
     public void load() {
-        loadFrom(CONFIG_FILE);
+        loadFrom(configFileForTest != null ? configFileForTest : CONFIG_FILE);
     }
 
     /** Load from an explicit file path (used by tests). */
     public void loadFrom(Path file) {
-        if (!Files.exists(file)) return;
+        if (!Files.exists(file)) {
+            log.fine("AppConfig: no config file at " + file + " — using defaults");
+            return;
+        }
+        log.fine("AppConfig: loading from " + file);
         try {
-            AppConfig loaded = MAPPER.readValue(file.toFile(), AppConfig.class);
-            this.lastSaveFilePath    = loaded.lastSaveFilePath;
-            this.gameArtDirectory    = loaded.gameArtDirectory;
-            if (loaded.windowWidth  > 0) this.windowWidth  = loaded.windowWidth;
-            if (loaded.windowHeight > 0) this.windowHeight = loaded.windowHeight;
-            this.windowX             = loaded.windowX;
-            this.windowY             = loaded.windowY;
-            this.overviewColumnOrder = loaded.overviewColumnOrder;
-            this.roleOrder           = loaded.roleOrder;
-            if (loaded.expectedStatsMode  != null) this.expectedStatsMode  = loaded.expectedStatsMode;
-            if (loaded.levelUpModalMode   != null) this.levelUpModalMode   = loaded.levelUpModalMode;
+            MAPPER.readerForUpdating(this).readValue(file.toFile());
+            log.fine("AppConfig: loaded — lastSaveFilePath=" + lastSaveFilePath
+                    + ", gameArtDirectory=" + gameArtDirectory);
         } catch (Exception e) {
-            log.warning("AppConfig: could not read config — " + e.getMessage());
+            // File exists but is unreadable (corrupt, truncated, wrong format).
+            // Preserve it under a .bad-<timestamp> name so the user can recover it,
+            // and let the next save() write a fresh file. Do NOT silently overwrite
+            // with defaults — that would permanently destroy the user's settings.
+            log.severe("AppConfig: could not read config — starting with defaults. Original file preserved. Error: " + e.getMessage());
+            try {
+                Path backup = file.resolveSibling(file.getFileName() + ".bad-" + System.currentTimeMillis());
+                Files.move(file, backup);
+                log.warning("AppConfig: corrupt config backed up to " + backup);
+            } catch (Exception ex) {
+                log.warning("AppConfig: could not back up corrupt config — " + ex.getMessage());
+            }
         }
     }
 
     /** Persist current values to the default config file. */
     public void save() {
-        saveTo(CONFIG_FILE);
+        saveTo(configFileForTest != null ? configFileForTest : CONFIG_FILE);
     }
 
     /** Persist current values to an explicit file path (used by tests). */
     public void saveTo(Path file) {
+        log.fine("AppConfig: saving to " + file
+                + " — lastSaveFilePath=" + lastSaveFilePath
+                + ", gameArtDirectory=" + gameArtDirectory);
+        Path tmp = file.resolveSibling(file.getFileName() + ".tmp");
         try {
             Files.createDirectories(file.getParent());
-            MAPPER.writerWithDefaultPrettyPrinter().writeValue(file.toFile(), this);
+            MAPPER.writerWithDefaultPrettyPrinter().writeValue(tmp.toFile(), this);
+            try {
+                Files.move(tmp, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException ex) {
+                Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING);
+            }
+            log.fine("AppConfig: saved OK");
         } catch (Exception e) {
             log.warning("AppConfig: could not save config — " + e.getMessage());
+            try { Files.deleteIfExists(tmp); } catch (Exception ignored) {}
         }
     }
 
@@ -134,8 +167,9 @@ public class AppConfig {
         return null;
     }
 
-    /** For tests only — resets the singleton so the next getInstance() starts fresh. */
+    /** For tests only — resets the singleton and config-file override so the next getInstance() starts fresh. */
     static void resetForTest() {
         instance = null;
+        configFileForTest = null;
     }
 }

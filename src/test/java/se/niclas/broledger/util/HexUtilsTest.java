@@ -83,4 +83,31 @@ class HexUtilsTest {
             assertEquals(n * 2, HexUtils.hexCharSpan(n));
         }
     }
+
+    // ---- sha256Hex ---------------------------------------------------------
+
+    @Test
+    void sha256Hex_returnsLowercaseHex() {
+        String result = HexUtils.sha256Hex("hello");
+        assertNotNull(result);
+        assertEquals(result, result.toLowerCase(), "sha256Hex must return lowercase hex");
+        assertEquals(64, result.length(), "SHA-256 produces 32 bytes = 64 hex chars");
+    }
+
+    @Test
+    void sha256Hex_knownValue() {
+        // SHA-256("hello") = 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+        assertEquals("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+                HexUtils.sha256Hex("hello"));
+    }
+
+    @Test
+    void sha256Hex_differentInputsDifferentOutputs() {
+        assertNotEquals(HexUtils.sha256Hex("a"), HexUtils.sha256Hex("b"));
+    }
+
+    @Test
+    void sha256Hex_sameInputSameOutput() {
+        assertEquals(HexUtils.sha256Hex("test"), HexUtils.sha256Hex("test"));
+    }
 }

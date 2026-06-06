@@ -42,7 +42,7 @@ Rounding will round halves up.
 
 #### Expected stats
 
-Expected stats is a best guess of final stats depending on where you allocate your stat increases up until level 11. This is done from the Brother detail card. When expected is active, and the increases have been allotted, you can mouseover the level cell and get level-up recommendations on which stats to increase based on rolls.
+Expected stats is a best guess of final stats depending on where you allocate your stat increases up until level 11. This is done from the Brother detail card. When expected is active and all increases are allotted, **click the level cell** in the overview to open a sticky guide panel showing which stats to prioritise for each roll. Click it again, click anywhere else in the app, or press ESC to close it. The panel stays open if you switch to another application (i.e. the game).
 
 For post-level 11 Bros, you can instead assign where those level-up +1s went, to get "expected" to correspond to a lvl 11 stat line making it comparable to other Bros.
 
@@ -109,6 +109,17 @@ The modal behaviour is configurable in **Preferences**:
 - **Modal** (default) — stays open until dismissed
 - **Auto-close** — closes automatically after 15 seconds
 - **Off** — suppresses the modal entirely
+
+### Keyboard shortcuts
+
+| Key | Where | Action |
+|-----|-------|--------|
+| Ctrl+O | Anywhere | Open save file |
+| Ctrl+W | Anywhere | Stop file watcher |
+| Enter | Overview | Open card for the selected brother |
+| ESC | Card view | Return to overview |
+| ESC | Level-up guide popup | Close the guide |
+| ESC | Any modal (level-up, preferences, role manager) | Close the modal |
 
 ### Role Fit Comparison
 

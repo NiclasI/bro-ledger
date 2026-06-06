@@ -18,6 +18,7 @@
         <VBox>
             <HBox fx:id="titleBar" styleClass="title-bar" alignment="CENTER_LEFT">
                 <Label text="Bro Ledger" styleClass="title-bar-label"/>
+                <Label fx:id="versionLabel" styleClass="title-bar-version"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button text="–" styleClass="window-btn" onAction="#minimizeWindow" focusTraversable="false"/>
                 <Button text="□" styleClass="window-btn" onAction="#toggleMaximize" focusTraversable="false"/>

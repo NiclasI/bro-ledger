@@ -19,14 +19,14 @@ class ImageMapServiceTest {
 
     @Test
     void resolveHex_knownPerk() {
-        // [data-hex="3E7523FA"] → perks/fast-adaptation.png
-        assertEquals("perks/fast-adaptation.png", svc.resolveHex("3E7523FA"));
+        // 3E7523FA = Fast Adaptation perk
+        assertEquals("gfx/ui/perks/perk_33.png", svc.resolveHex("3E7523FA"));
     }
 
     @Test
     void resolveHex_knownTrait() {
-        // [data-hex="6FF46EFE"] → traits/athletic.png
-        assertEquals("traits/athletic.png", svc.resolveHex("6FF46EFE"));
+        // 6FF46EFE = Athletic trait
+        assertEquals("gfx/ui/traits/trait_icon_21.png", svc.resolveHex("6FF46EFE"));
     }
 
     @Test
@@ -48,8 +48,9 @@ class ImageMapServiceTest {
 
     @Test
     void resolve_genericBodyArmor() {
-        // [data-slot="body"][data-icon="1"] → armor/body-armor-01.png
-        assertEquals("armor/body-armor-01.png", svc.resolve("body", null, 1, null));
+        // slot=body, icon=1 → inventory_body_armor_01.png (archive src path)
+        assertEquals("gfx/ui/items/armor/inventory_body_armor_01.png",
+                svc.resolve("body", null, 1, null));
     }
 
     @Test
@@ -61,8 +62,7 @@ class ImageMapServiceTest {
 
     @Test
     void resolve_slotHexIconBeatsSlotIcon() {
-        // [data-slot="body"][data-icon="1"][data-hex="BF3413DE"] overrides
-        // [data-slot="body"][data-icon="1"]
+        // slot=body, icon=1, hex=BF3413DE (named Southern Mail) overrides generic body:1
         String generic = svc.resolve("body", null,       1, null);
         String named   = svc.resolve("body", "BF3413DE", 1, null);
         assertNotNull(named);
@@ -71,19 +71,18 @@ class ImageMapServiceTest {
 
     @Test
     void resolve_hexDirectBeatsSlotIcon() {
-        // A hex with a direct mapping should return the direct path even when
-        // a slot+icon fallback also exists.
+        // A hex with a direct mapping returns the archive src path (gfx/ui/perks/…)
         String direct = svc.resolveHex("3E7523FA");
         assertNotNull(direct);
-        assertTrue(direct.startsWith("perks/"));
+        assertTrue(direct.startsWith("gfx/ui/perks/"));
     }
 
     // ---- resolveAttachment -------------------------------------------------
 
     @Test
     void resolveAttachment_knownEntry() {
-        // [data-slot="body"][data-attachment="76B57B86"] → armor-upgrades/bone-plating.png
-        assertEquals("armor-upgrades/bone-plating.png",
+        // slot=body, attachment=76B57B86 (Bone Platings)
+        assertEquals("gfx/ui/items/armor_upgrades/inventory_upgrade_06.png",
                 svc.resolveAttachment("body", "76B57B86"));
     }
 
@@ -102,8 +101,8 @@ class ImageMapServiceTest {
 
     @Test
     void resolveHexHouse_knownEntry() {
-        // [data-slot="body"][data-hex="2847F403"][data-house="1"] → armor/faction-armor-01.png
-        assertEquals("armor/faction-armor-01.png",
+        // slot=body, hex=2847F403, house=1 → faction armor variant
+        assertEquals("gfx/ui/items/armor/inventory_faction_armor_01.png",
                 svc.resolveHexHouse("body", "2847F403", 1));
     }
 
@@ -112,11 +111,11 @@ class ImageMapServiceTest {
         assertNull(svc.resolveHexHouse("body", "2847F403", 999));
     }
 
-    // ---- Comma-grouped selectors (two hex IDs share one image) ------------
+    // ---- Two hex IDs sharing one image ------------------------------------
 
     @Test
     void resolveHex_commaGroupedBothMapped() {
-        // [data-hex="D6461010"], [data-hex="B6FBBE7B"] { ... honor-oath.png }
+        // D6461010 and B6FBBE7B share the same trait icon
         assertEquals(svc.resolveHex("D6461010"), svc.resolveHex("B6FBBE7B"));
         assertNotNull(svc.resolveHex("D6461010"));
     }

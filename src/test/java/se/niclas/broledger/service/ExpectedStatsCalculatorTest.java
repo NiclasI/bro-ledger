@@ -135,6 +135,30 @@ class ExpectedStatsCalculatorTest {
                 "Greedy must fall back to naive when allocation is incomplete");
     }
 
+    @Test
+    void greedyFallsBackToNaive_whenAStatExceedsRemainingButSumMatches() {
+        // Reproduces a stale allocation left over from a temporarily higher budget
+        // (e.g. rolls assigned while a Gifted perk was planned, then un-planned):
+        // sum(inc) == 3 × remaining, but one stat's count alone exceeds remaining.
+        // isFullyAllocated() only checks the sum, so without the extra guard this
+        // used to reach expectedGains()'s validate() and throw IllegalArgumentException.
+        Brother b = brother(6); // remaining=5, budget=15
+        b.stats[Stat.HEALTH.statIndex()] = 50;
+        int[] inc = new int[8];
+        inc[Stat.HEALTH.ordinal()] = 10; // exceeds remaining=5
+        inc[Stat.RESOLVE.ordinal()] = 5; // sum = 15 = 3×5
+        // (rest stay 0)
+
+        ExpectedStatsCalculator.Expected naive =
+                ExpectedStatsCalculator.compute(b, Stat.HEALTH, inc, ExpectedStatsCalculator.Mode.NAIVE);
+        ExpectedStatsCalculator.Expected greedy =
+                assertDoesNotThrow(() ->
+                        ExpectedStatsCalculator.compute(b, Stat.HEALTH, inc, ExpectedStatsCalculator.Mode.GREEDY));
+
+        assertEquals(naive.baseExpected(), greedy.baseExpected(),
+                "Greedy must fall back to naive on a stale over-cap allocation instead of throwing");
+    }
+
     // ---- autoAssignByRole ---------------------------------------------------
 
     private static Role roleWith3P1() {

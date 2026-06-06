@@ -24,6 +24,7 @@ class RoleServiceTest {
     void setUp() {
         rolesFile = tempDir.resolve("roles.json");
         AppConfig.resetForTest();
+        AppConfig.configFileForTest = tempDir.resolve("config.json");
         service = RoleService.createForTest(rolesFile);
     }
 
