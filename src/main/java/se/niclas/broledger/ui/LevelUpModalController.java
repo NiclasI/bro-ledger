@@ -59,6 +59,7 @@ public class LevelUpModalController implements Initializable {
         nameLabel.getStyleClass().add("section-header");
         card.getChildren().add(nameLabel);
 
+        boolean underConsumed = OverviewCalc.isUnderConsumed(ev.consumedIncreases(), ev.levelsAssigned());
         for (Stat s : Stat.values()) {
             Integer delta = ev.statDeltas().get(s);
             if (delta == null || delta <= 0) continue;
@@ -67,7 +68,7 @@ public class LevelUpModalController implements Initializable {
                     + (consumed != null ? "  (" + consumed + " planned consumed)" : "");
             Label statLine = new Label(text);
             statLine.getStyleClass().add("stat-label");
-            if (OverviewCalc.isPartiallyConsumed(consumed, ev.levelsAssigned())) {
+            if (underConsumed) {
                 statLine.setStyle("-fx-text-fill: #c87820;");
             }
             card.getChildren().add(statLine);

@@ -505,9 +505,12 @@ public class BrotherOverviewPane {
                         ? ctx.annotation().get(b.fingerprint).statIncreases : null;
                 int[] post11inc = b.fingerprint != null
                         ? ctx.annotation().get(b.fingerprint).post11Increases : null;
+                Map<String, String> planStatus = b.fingerprint != null
+                        ? ctx.annotation().get(b.fingerprint).perkPlanStatus : null;
+                int remainingLevels = OverviewCalc.effectiveRemainingLevels(
+                        b, ExpectedStatsCalculator.remainingLevels(b), planStatus);
                 OverviewCalc.LevelBudget budget = OverviewCalc.levelBudget(
-                        b.levelTotal, ExpectedStatsCalculator.remainingLevels(b),
-                        increases, post11inc);
+                        b.levelTotal, remainingLevels, increases, post11inc);
                 int usedBudget  = budget.used();
                 int totalBudget = budget.totalBudget();
 

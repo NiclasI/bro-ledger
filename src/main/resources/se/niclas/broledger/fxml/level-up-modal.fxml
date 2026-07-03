@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox styleClass="app-frame,level-up-frame" minWidth="400" minHeight="200"
+<VBox styleClass="app-frame,modal-frame,level-up-frame" minWidth="400" minHeight="200"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="se.niclas.broledger.ui.LevelUpModalController">
 

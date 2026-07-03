@@ -14,7 +14,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.Region?>
 
-<VBox styleClass="app-frame" minWidth="820" minHeight="620"
+<VBox styleClass="app-frame,modal-frame" minWidth="960" minHeight="620"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="se.niclas.broledger.ui.RoleManagerController">
 
@@ -26,19 +26,23 @@
     </HBox>
 
     <!-- Content -->
-    <SplitPane dividerPositions="0.37" VBox.vgrow="ALWAYS">
+    <SplitPane dividerPositions="0.22" VBox.vgrow="ALWAYS">
 
         <!-- Left: role list -->
-        <VBox styleClass="sidebar" minWidth="300">
+        <VBox styleClass="sidebar" minWidth="180" maxWidth="220">
             <Label text="Roles" styleClass="sidebar-header"/>
             <ListView fx:id="roleList" VBox.vgrow="ALWAYS"/>
-            <HBox spacing="8" styleClass="role-list-buttons">
+            <VBox spacing="6" styleClass="role-list-buttons">
                 <padding><Insets top="8" right="8" bottom="8" left="8"/></padding>
-                <Button text="+ Add"    onAction="#addRole"      styleClass="fancy-btn"/>
-                <Button text="− Delete" onAction="#deleteRole"   styleClass="fancy-btn"/>
-                <Button text="▲"        onAction="#moveRoleUp"   styleClass="fancy-btn" style="-fx-min-width: 36;"/>
-                <Button text="▼"        onAction="#moveRoleDown" styleClass="fancy-btn" style="-fx-min-width: 36;"/>
-            </HBox>
+                <HBox spacing="6">
+                    <Button text="+ Add"    onAction="#addRole"      styleClass="fancy-btn" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                    <Button text="− Delete" onAction="#deleteRole"   styleClass="fancy-btn" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <HBox spacing="6">
+                    <Button text="▲" onAction="#moveRoleUp"   styleClass="fancy-btn" maxWidth="Infinity" HBox.hgrow="ALWAYS" style="-fx-min-width: 36;"/>
+                    <Button text="▼" onAction="#moveRoleDown" styleClass="fancy-btn" maxWidth="Infinity" HBox.hgrow="ALWAYS" style="-fx-min-width: 36;"/>
+                </HBox>
+            </VBox>
         </VBox>
 
         <!-- Right: edit form -->
@@ -70,7 +74,10 @@
 
             <!-- Perk Plan (populated programmatically) -->
             <VBox spacing="4" styleClass="card-section" VBox.vgrow="ALWAYS">
-                <Label text="Perk Plan" styleClass="section-header"/>
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label text="Perk Plan" styleClass="section-header"/>
+                    <Label fx:id="perkPlanBadgeLabel" styleClass="perk-plan-badge" visible="false" managed="false"/>
+                </HBox>
                 <ScrollPane fx:id="perkPlanScrollPane" fitToWidth="true" VBox.vgrow="ALWAYS"
                             styleClass="modal-scroll" hbarPolicy="NEVER">
                     <VBox fx:id="perkPlanContainer"/>

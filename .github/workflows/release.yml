@@ -13,7 +13,7 @@ jobs:
         with:
           java-version: '25'
           distribution: 'temurin'
-      - run: mvn --batch-mode -Dapp.version=${GITHUB_REF_NAME#v} -Dlog.file.enabled=false package
+      - run: mvn --batch-mode -Dapp.version=${GITHUB_REF_NAME#v} -Dlog.file.enabled=false -Ddebug.enabled=false package
         shell: bash
       - uses: softprops/action-gh-release@v2
         with:

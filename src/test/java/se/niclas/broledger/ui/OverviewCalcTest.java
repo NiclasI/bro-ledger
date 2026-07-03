@@ -3,10 +3,13 @@ package se.niclas.broledger.ui;
 import org.junit.jupiter.api.Test;
 import se.niclas.broledger.model.InventorySlot;
 import se.niclas.broledger.model.Role;
+import se.niclas.broledger.model.Stat;
 import se.niclas.broledger.service.ExpectedStatsCalculator;
 
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -302,7 +305,7 @@ class OverviewCalcTest {
         assertEquals("EXTRA001", pouches.get(0).itemId);
     }
 
-    // ---- levelUpStatusText / isPartiallyConsumed ---------------------------
+    // ---- levelUpStatusText / isUnderConsumed --------------------------------
 
     @Test
     void levelUpStatusText_post11Adjusted() {
@@ -325,18 +328,36 @@ class OverviewCalcTest {
     }
 
     @Test
-    void isPartiallyConsumed_trueWhenLessThanLevels() {
-        assertTrue(OverviewCalc.isPartiallyConsumed(1, 2));
+    void isUnderConsumed_trueWhenTotalBelowExpected() {
+        Map<Stat, Integer> consumed = new EnumMap<>(Stat.class);
+        consumed.put(Stat.MELEE_SKILL, 2);
+        assertTrue(OverviewCalc.isUnderConsumed(consumed, 1)); // 2 < 3*1
     }
 
     @Test
-    void isPartiallyConsumed_falseWhenEqual() {
-        assertFalse(OverviewCalc.isPartiallyConsumed(2, 2));
+    void isUnderConsumed_falseWhenTotalMeetsExpected() {
+        Map<Stat, Integer> consumed = new EnumMap<>(Stat.class);
+        consumed.put(Stat.MELEE_SKILL, 4);
+        consumed.put(Stat.RESOLVE, 2);
+        assertFalse(OverviewCalc.isUnderConsumed(consumed, 2)); // 6 == 3*2
     }
 
     @Test
-    void isPartiallyConsumed_falseWhenNull() {
-        assertFalse(OverviewCalc.isPartiallyConsumed(null, 2));
+    void isUnderConsumed_trueWhenMultiStatStillShort() {
+        Map<Stat, Integer> consumed = new EnumMap<>(Stat.class);
+        consumed.put(Stat.MELEE_SKILL, 3);
+        consumed.put(Stat.RESOLVE, 2);
+        assertTrue(OverviewCalc.isUnderConsumed(consumed, 2)); // 5 < 3*2
+    }
+
+    @Test
+    void isUnderConsumed_falseWhenEmpty() {
+        assertFalse(OverviewCalc.isUnderConsumed(Map.of(), 2));
+    }
+
+    @Test
+    void isUnderConsumed_falseWhenNull() {
+        assertFalse(OverviewCalc.isUnderConsumed(null, 2));
     }
 
     // ---- perkComparator ----------------------------------------------------
@@ -386,5 +407,52 @@ class OverviewCalcTest {
                 PerkSortMode.OFF, id -> 1, id -> 0L, id -> id);
         List<String> sorted = ids.stream().sorted(comp).toList();
         assertEquals(List.of("A", "B", "C"), sorted);
+    }
+
+    // ---- masteryOrderRank ---------------------------------------------------
+
+    @Test
+    void masteryOrderRank_firstAndLast() {
+        assertEquals(0, OverviewCalc.masteryOrderRank("Mace Mastery"));
+        assertEquals(11, OverviewCalc.masteryOrderRank("Throwing Mastery"));
+    }
+
+    @Test
+    void masteryOrderRank_crossbowBeforeBow() {
+        // Guards against a naive prefix match confusing "Bow" and "Crossbow".
+        int crossbow = OverviewCalc.masteryOrderRank("Crossbow Mastery");
+        int bow = OverviewCalc.masteryOrderRank("Bow Mastery");
+        assertTrue(crossbow < bow);
+    }
+
+    @Test
+    void masteryOrderRank_caseInsensitive() {
+        assertEquals(0, OverviewCalc.masteryOrderRank("mace mastery"));
+    }
+
+    @Test
+    void masteryOrderRank_unknownName_maxValue() {
+        assertEquals(Integer.MAX_VALUE, OverviewCalc.masteryOrderRank("Iron Lungs"));
+    }
+
+    @Test
+    void masteryOrderRank_nullName_maxValue() {
+        assertEquals(Integer.MAX_VALUE, OverviewCalc.masteryOrderRank(null));
+    }
+
+    @Test
+    void masteryOrderRank_fullSortMatchesRequestedOrder() {
+        List<String> shuffled = List.of(
+                "Throwing Mastery", "Bow Mastery", "Crossbow Mastery", "Spear Mastery",
+                "Polearm Mastery", "Dagger Mastery", "Sword Mastery", "Cleaver Mastery",
+                "Axe Mastery", "Hammer Mastery", "Flail Mastery", "Mace Mastery");
+        List<String> sorted = shuffled.stream()
+                .sorted(Comparator.comparingInt(OverviewCalc::masteryOrderRank))
+                .toList();
+        assertEquals(List.of(
+                "Mace Mastery", "Flail Mastery", "Hammer Mastery", "Axe Mastery",
+                "Cleaver Mastery", "Sword Mastery", "Dagger Mastery", "Polearm Mastery",
+                "Spear Mastery", "Crossbow Mastery", "Bow Mastery", "Throwing Mastery"),
+                sorted);
     }
 }

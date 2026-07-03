@@ -1,13 +1,16 @@
 package se.niclas.broledger.ui;
 
+import se.niclas.broledger.model.Brother;
 import se.niclas.broledger.model.InventorySlot;
 import se.niclas.broledger.model.Role;
+import se.niclas.broledger.model.Stat;
 import se.niclas.broledger.service.ExpectedStatsCalculator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 import java.util.function.ToLongFunction;
@@ -57,6 +60,30 @@ public final class OverviewCalc {
         if (arr == null) return true;
         for (int v : arr) if (v > cap) return false;
         return true;
+    }
+
+    // ---- gifted perk bonus --------------------------------------------------
+
+    private static final String GIFTED_HEX_ID = "9899E380";
+
+    /** True when the brother already owns the Gifted perk. */
+    static boolean hasGiftedPerk(Brother b) {
+        return b.perkIds.stream().anyMatch(id -> GIFTED_HEX_ID.equalsIgnoreCase(id));
+    }
+
+    /** True when Gifted is PLANNED in the perk plan and not yet owned. */
+    static boolean isGiftedPending(Brother b, Map<String, String> planStatus) {
+        if (b == null || hasGiftedPerk(b)) return false;
+        if (planStatus == null) return false;
+        return "PLANNED".equals(planStatus.get(GIFTED_HEX_ID));
+    }
+
+    /**
+     * Remaining pre-lv11 level-ups, plus one extra when a not-yet-owned Gifted perk
+     * is planned (Gifted grants a bonus level-up).
+     */
+    static int effectiveRemainingLevels(Brother b, int remainingLevels, Map<String, String> planStatus) {
+        return remainingLevels + (isGiftedPending(b, planStatus) ? 1 : 0);
     }
 
     // ---- budget state & formatting ----------------------------------------
@@ -160,6 +187,25 @@ public final class OverviewCalc {
         return tier != null ? "[T" + tier + "] " + name : name;
     }
 
+    /** Combat weapon order for tier-4 "<Weapon> Mastery" perks, matching the in-game perk tree row. */
+    private static final List<String> MASTERY_WEAPON_ORDER = List.of(
+            "Mace", "Flail", "Hammer", "Axe", "Cleaver", "Sword",
+            "Dagger", "Polearm", "Spear", "Crossbow", "Bow", "Throwing");
+
+    /**
+     * Rank of a tier-4 weapon Mastery perk within {@link #MASTERY_WEAPON_ORDER}, matched by
+     * the "<Weapon> Mastery" name convention (case-insensitive). Returns {@link Integer#MAX_VALUE}
+     * for names that don't match a known mastery, so they sort after recognized ones.
+     */
+    public static int masteryOrderRank(String name) {
+        if (name == null) return Integer.MAX_VALUE;
+        for (int i = 0; i < MASTERY_WEAPON_ORDER.size(); i++) {
+            String weapon = MASTERY_WEAPON_ORDER.get(i);
+            if (name.equalsIgnoreCase(weapon + " Mastery")) return i;
+        }
+        return Integer.MAX_VALUE;
+    }
+
     // ---- sort / classification helpers ------------------------------------
 
     /**
@@ -202,10 +248,13 @@ public final class OverviewCalc {
     }
 
     /**
-     * Returns true when a planned-increase consumption was only partial
-     * (consumed fewer planned increases than the number of levels assigned).
+     * True when a level-up's plan under-covered it: the total planned increases consumed
+     * across all stats is below the expected 3 per assigned level. Returns false when no
+     * plan was consumed (empty/null map) — nothing to flag.
      */
-    static boolean isPartiallyConsumed(Integer consumed, int levelsAssigned) {
-        return consumed != null && consumed < levelsAssigned;
+    static boolean isUnderConsumed(Map<Stat, Integer> consumedIncreases, int levelsAssigned) {
+        if (consumedIncreases == null || consumedIncreases.isEmpty()) return false;
+        int total = consumedIncreases.values().stream().mapToInt(Integer::intValue).sum();
+        return total < 3 * levelsAssigned;
     }
 }

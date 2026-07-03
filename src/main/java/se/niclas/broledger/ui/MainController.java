@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
+import se.niclas.broledger.AppInfo;
 import se.niclas.broledger.model.Brother;
 import se.niclas.broledger.model.DictionaryEntry;
 import se.niclas.broledger.parser.SaveParser;
@@ -119,10 +120,14 @@ public class MainController implements Initializable {
         watchStatusLabel.getStyleClass().add("watch-status-label");
 
         // Left: Open Save button + export buttons + watch status label
-        Node openBtn    = fancyActionButton("Open Save", currentFileName, this::openSave);
-        Node exportBtn  = fancyActionButton("Export",  null, this::exportSave);
-        Node excerptBtn = fancyActionButton("Excerpt", null, this::exportExcerpt);
-        HBox left = new HBox(8, openBtn, exportBtn, excerptBtn, watchStatusLabel);
+        Node openBtn   = fancyActionButton("Open Save", currentFileName, this::openSave);
+        Node exportBtn = fancyActionButton("Export",  null, this::exportSave);
+        HBox left = new HBox(8, openBtn, exportBtn);
+        if (AppInfo.isDebug()) {
+            // "Excerpt" is a developer/diagnostic export variant — omitted from release builds.
+            left.getChildren().add(fancyActionButton("Excerpt", null, this::exportExcerpt));
+        }
+        left.getChildren().add(watchStatusLabel);
         left.setAlignment(Pos.CENTER_LEFT);
 
         // Center: Overview toggle buttons (hidden when in brother detail view)
@@ -733,15 +738,8 @@ public class MainController implements Initializable {
     }
 
     private static String readVersion() {
-        try (var in = MainController.class.getResourceAsStream("/se/niclas/broledger/version.properties")) {
-            if (in == null) return "";
-            var props = new java.util.Properties();
-            props.load(in);
-            String v = props.getProperty("version", "");
-            return v.isBlank() ? "" : "v" + v;
-        } catch (Exception e) {
-            return "";
-        }
+        String v = AppInfo.version();
+        return v.isBlank() ? "" : "v" + v;
     }
 
     private void showError(String header, String message) {

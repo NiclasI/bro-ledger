@@ -30,6 +30,7 @@ public class RoleManagerController implements Initializable {
     @FXML private ToggleGroup     positionGroup;
     @FXML private GridPane        statEditorGrid;
     @FXML private VBox            perkPlanContainer;
+    @FXML private Label           perkPlanBadgeLabel;
 
     private final TextField[]   targetFields = new TextField[8];
     private final ToggleGroup[] prioGroups   = new ToggleGroup[8];
@@ -93,6 +94,7 @@ public class RoleManagerController implements Initializable {
             if (selected == null) return;
             selected.perkPlanTemplate = newStatus.isEmpty() ? null : new LinkedHashMap<>(newStatus);
             RoleService.getInstance().update(selected);
+            updatePerkBadge(selected.perkPlanTemplate);
             notifyChanged();
         });
         perkPlanContainer.getChildren().add(perkPlanPane);
@@ -241,6 +243,20 @@ public class RoleManagerController implements Initializable {
         if (perkPlanPane != null) {
             perkPlanPane.setStatus(r.perkPlanTemplate);
         }
+        updatePerkBadge(r.perkPlanTemplate);
+    }
+
+    private void updatePerkBadge(Map<String, String> planStatus) {
+        long planned  = planStatus == null ? 0 : planStatus.values().stream().filter("PLANNED"::equals).count();
+        long optional = planStatus == null ? 0 : planStatus.values().stream().filter("OPTIONAL"::equals).count();
+        if (planned == 0 && optional == 0) {
+            perkPlanBadgeLabel.setVisible(false);
+            perkPlanBadgeLabel.setManaged(false);
+        } else {
+            perkPlanBadgeLabel.setText("P: " + planned + "  ·  O: " + optional);
+            perkPlanBadgeLabel.setManaged(true);
+            perkPlanBadgeLabel.setVisible(true);
+        }
     }
 
     private void setFormDisabled(boolean disabled) {
@@ -260,6 +276,7 @@ public class RoleManagerController implements Initializable {
                 prioGroups[i].selectToggle(prioGroups[i].getToggles().get(2)); // P3
             }
             if (perkPlanPane != null) perkPlanPane.setStatus(null);
+            updatePerkBadge(null);
         }
     }
 

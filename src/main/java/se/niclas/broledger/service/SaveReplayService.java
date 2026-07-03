@@ -1,5 +1,6 @@
 package se.niclas.broledger.service;
 
+import se.niclas.broledger.AppInfo;
 import se.niclas.broledger.util.HexUtils;
 
 import java.io.IOException;
@@ -19,7 +20,8 @@ import java.util.stream.Stream;
  * annotations) into {@code ~/.bro-ledger/replay/<hash>/} whenever an overwrite is detected,
  * so that the sequence can be replayed offline via {@link se.niclas.broledger.tools.ReplayAnalyzer}.
  *
- * <p>Capture is off by default and is gated on {@link AppConfig#replayCaptureEnabled}.</p>
+ * <p>Capture is off by default and is gated on {@link AppConfig#replayCaptureEnabled}, and is
+ * additionally disabled outright in non-debug (tagged-release) builds — see {@link AppInfo#isDebug()}.</p>
  *
  * <p>At most {@link #MAX_SNAPSHOTS} save snapshots are kept per save file; older ones
  * (plus their paired {@code .broledger.json} annotation files) are pruned automatically.</p>
@@ -64,7 +66,7 @@ public class SaveReplayService {
 
     /**
      * Captures the current save file into the replay directory if
-     * {@link AppConfig#replayCaptureEnabled} is true.
+     * {@link AppConfig#replayCaptureEnabled} is true and this is a debug build.
      *
      * <p>The annotation bytes are read <em>synchronously</em> on the calling thread
      * (the FX thread) so they reflect the pre-reconciliation state. The actual file
@@ -73,7 +75,7 @@ public class SaveReplayService {
      * <p>Safe to call even when capture is disabled — returns immediately.</p>
      */
     public void capture(Path savePath) {
-        if (!AppConfig.getInstance().replayCaptureEnabled) return;
+        if (!AppInfo.isDebug() || !AppConfig.getInstance().replayCaptureEnabled) return;
 
         // Read annotation bytes NOW (pre-reconciliation state, FX thread) before spawning
         // the daemon thread that may race with reconcileOnReload writing to disk.

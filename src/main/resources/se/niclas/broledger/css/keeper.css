@@ -7,6 +7,12 @@
     -fx-border-width: 1;
 }
 
+.modal-frame {
+    -fx-border-color: #d69f23;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, #d69f23, 18, 0.4, 0, 0);
+}
+
 .title-bar {
     -fx-background-color: #050302;
     -fx-padding: 0 0 0 10;
@@ -897,8 +903,6 @@
 /* ===== Level-up modal ===== */
 
 .level-up-frame {
-    -fx-border-color: #d69f23;
-    -fx-border-width: 2;
     -fx-background-color: #211608;
     -fx-effect: dropshadow(gaussian, #d69f23, 24, 0.45, 0, 0);
 }

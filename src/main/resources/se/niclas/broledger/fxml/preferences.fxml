@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox styleClass="app-frame" minWidth="420" minHeight="200"
+<VBox styleClass="app-frame,modal-frame" minWidth="420" minHeight="200"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="se.niclas.broledger.ui.PreferencesController">
 
@@ -53,8 +53,8 @@
             </HBox>
         </VBox>
 
-        <!-- Update Replay -->
-        <VBox spacing="8" styleClass="card-section">
+        <!-- Update Replay (debug builds only) -->
+        <VBox fx:id="replaySection" spacing="8" styleClass="card-section">
             <Label text="Update Replay" styleClass="section-header"/>
             <Label text="Saves a copy of the save file and planned stat increases before each overwrite. Run ReplayAnalyzer to inspect the captured sequence and detect reconciliation errors." styleClass="stat-label" wrapText="true"/>
             <CheckBox fx:id="replayCaptureCheck" text="Enable capture on overwrite (stored in ~/.bro-ledger/replay/)" styleClass="pref-check"/>

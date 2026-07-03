@@ -8,7 +8,9 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import se.niclas.broledger.AppInfo;
 import se.niclas.broledger.service.AppConfig;
 import se.niclas.broledger.service.ExpectedStatsCalculator;
 
@@ -25,6 +27,7 @@ public class PreferencesController implements Initializable {
     @FXML private RadioButton lvlAutoCloseRadio;
     @FXML private RadioButton lvlOffRadio;
     @FXML private ToggleGroup lvlModalGroup;
+    @FXML private VBox        replaySection;
     @FXML private CheckBox    replayCaptureCheck;
 
     private double dragOffsetX, dragOffsetY;
@@ -91,12 +94,22 @@ public class PreferencesController implements Initializable {
             AppConfig.getInstance().save();
         });
 
-        // Initialize update-replay capture setting
-        replayCaptureCheck.setSelected(AppConfig.getInstance().replayCaptureEnabled);
-        replayCaptureCheck.selectedProperty().addListener((obs, old, selected) -> {
-            AppConfig.getInstance().replayCaptureEnabled = selected;
-            AppConfig.getInstance().save();
-        });
+        // Update-replay capture is a developer/diagnostic feature — hidden and force-disabled
+        // outside debug builds (see AppInfo.isDebug()).
+        if (AppInfo.isDebug()) {
+            replayCaptureCheck.setSelected(AppConfig.getInstance().replayCaptureEnabled);
+            replayCaptureCheck.selectedProperty().addListener((obs, old, selected) -> {
+                AppConfig.getInstance().replayCaptureEnabled = selected;
+                AppConfig.getInstance().save();
+            });
+        } else {
+            replaySection.setVisible(false);
+            replaySection.setManaged(false);
+            if (AppConfig.getInstance().replayCaptureEnabled) {
+                AppConfig.getInstance().replayCaptureEnabled = false;
+                AppConfig.getInstance().save();
+            }
+        }
     }
 
     public void setOnChanged(Runnable callback) {

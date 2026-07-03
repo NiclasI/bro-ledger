@@ -16,6 +16,7 @@
         <maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
         <app.version>${maven.build.timestamp}</app.version>
         <log.file.enabled>true</log.file.enabled>
+        <debug.enabled>true</debug.enabled>
     </properties>
 
     <dependencies>

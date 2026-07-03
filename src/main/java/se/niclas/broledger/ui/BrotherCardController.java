@@ -58,8 +58,6 @@ public class BrotherCardController implements Initializable {
         "weapon", "shield", "body", "helmet", "trinket", "quiver", "pouch"
     };
 
-    private static final String GIFTED_HEX_ID = "9899E380";
-
     // Grid layout constants
     private static final int STAT_HEADER_ROW       = 0;
     private static final int FIRST_STAT_ROW        = 1;
@@ -382,17 +380,11 @@ public class BrotherCardController implements Initializable {
 
     // ---- per-brother updates -----------------------------------------------
 
-    private boolean hasGiftedPerk(Brother b) {
-        return b.perkIds.stream().anyMatch(id -> GIFTED_HEX_ID.equalsIgnoreCase(id));
-    }
-
     /** True when Gifted is PLANNED in the perk plan and not yet owned. */
     private boolean isGiftedPending(Brother b) {
-        if (b == null || hasGiftedPerk(b)) return false;
-        if (b.fingerprint == null) return false;
-        java.util.Map<String, String> plan = ctx.annotation().get(b.fingerprint).perkPlanStatus;
-        if (plan == null) return false;
-        return "PLANNED".equals(plan.get(GIFTED_HEX_ID));
+        if (b == null || b.fingerprint == null) return false;
+        Map<String, String> plan = ctx.annotation().get(b.fingerprint).perkPlanStatus;
+        return OverviewCalc.isGiftedPending(b, plan);
     }
 
     private void buildTraitsPane(Brother b) {
@@ -864,6 +856,8 @@ public class BrotherCardController implements Initializable {
                 ctx.annotation().setRole(b.fingerprint, newRole != null ? newRole.id : null);
             }
             applyPersistentTargetColumn();
+            refreshIncreaseUi();
+            updateInitPlanBtn(b);
         });
     }
 
