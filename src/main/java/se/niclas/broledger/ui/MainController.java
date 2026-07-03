@@ -13,7 +13,6 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
@@ -26,7 +25,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -40,10 +38,13 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import se.niclas.broledger.AppInfo;
 import se.niclas.broledger.model.Brother;
 import se.niclas.broledger.model.DictionaryEntry;
@@ -53,6 +54,7 @@ import se.niclas.broledger.service.AnnotationService.LevelUpEvent;
 import se.niclas.broledger.service.AppConfig;
 import se.niclas.broledger.service.DictionaryService;
 import se.niclas.broledger.service.FileWatcherService;
+import se.niclas.broledger.service.RoleService;
 import se.niclas.broledger.service.SaveReplayService;
 import se.niclas.broledger.tools.BrotherCsvExporter;
 import se.niclas.broledger.tools.parser.BrotherSavefileExporter;
@@ -508,6 +510,32 @@ public class MainController implements Initializable {
     private void applyResult(SaveParser parser, List<Brother> parsed) {
         brothers = parsed.stream().sorted(BrotherOverviewPane.sortComparator(uiCtx)).toList();
         showWarnings(parser.getWarnings());
+        repairDanglingRoleRefs();
+    }
+
+    /**
+     * Clears annotation role references whose role was deleted while this save was not
+     * loaded (deleting a role can only clean the save that is open at the time). The
+     * repair is persisted, and the user is told which loaded brothers were affected.
+     */
+    private void repairDanglingRoleRefs() {
+        Set<String> validIds = RoleService.getInstance().getAll().stream()
+                .map(r -> r.id).collect(Collectors.toSet());
+        Set<String> cleared = new HashSet<>(uiCtx.annotation().clearDanglingRoleRefs(validIds));
+        if (cleared.isEmpty()) return;
+        List<String> names = brothers.stream()
+                .filter(b -> b.fingerprint != null && cleared.contains(b.fingerprint))
+                .map(b -> b.name).toList();
+        // Entries for brothers no longer in the save are repaired silently.
+        if (!names.isEmpty()) setStatus(danglingRoleMessage(names), true);
+    }
+
+    /** Status-bar text listing the brothers whose deleted-role assignment was cleared. */
+    static String danglingRoleMessage(List<String> names) {
+        String shown = String.join(", ", names.subList(0, Math.min(5, names.size())));
+        String more  = names.size() > 5 ? " +" + (names.size() - 5) + " more" : "";
+        return names.size() + " brother(s) referenced a deleted role — assignment cleared: "
+                + shown + more;
     }
 
     static boolean isValid(Brother b) {
@@ -625,16 +653,9 @@ public class MainController implements Initializable {
             RoleManagerController ctrl = loader.getController();
             ctrl.setOnRolesChanged(this::onRolesChanged);
             ctrl.setUiContext(UiContext.defaults());
+            ctrl.setRoleUsageCounter(this::countBrothersAssignedTo);
 
-            Stage stage = new Stage();
-            stage.initStyle(javafx.stage.StageStyle.UNDECORATED);
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.initOwner(centerPane.getScene().getWindow());
-            Scene scene = new Scene(root);
-            URL css = getClass().getResource("/se/niclas/broledger/css/keeper.css");
-            if (css != null) scene.getStylesheets().add(css.toExternalForm());
-            stage.setScene(scene);
-            stage.showAndWait();
+            Modals.showModal(root, centerPane.getScene().getWindow());
         } catch (Exception e) {
             log.warning("Could not open role manager: " + e.getMessage());
         }
@@ -651,14 +672,7 @@ public class MainController implements Initializable {
             javafx.stage.Window owner = centerPane.getScene().getWindow();
             double maxH = owner.getHeight() * 0.9;
             ((Region) root).setMaxHeight(maxH);
-            Stage stage = new Stage();
-            stage.initStyle(javafx.stage.StageStyle.UNDECORATED);
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.initOwner(owner);
-            Scene scene = new Scene(root);
-            URL css = getClass().getResource("/se/niclas/broledger/css/keeper.css");
-            if (css != null) scene.getStylesheets().add(css.toExternalForm());
-            stage.setScene(scene);
+            Stage stage = Modals.buildModal(root, owner);
             stage.setMaxHeight(maxH);
             if (autoClose) {
                 stage.show();
@@ -682,15 +696,7 @@ public class MainController implements Initializable {
             PreferencesController ctrl = loader.getController();
             ctrl.setOnChanged(this::onPreferencesChanged);
 
-            Stage stage = new Stage();
-            stage.initStyle(javafx.stage.StageStyle.UNDECORATED);
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.initOwner(centerPane.getScene().getWindow());
-            Scene scene = new Scene(root);
-            URL css = getClass().getResource("/se/niclas/broledger/css/keeper.css");
-            if (css != null) scene.getStylesheets().add(css.toExternalForm());
-            stage.setScene(scene);
-            stage.showAndWait();
+            Modals.showModal(root, centerPane.getScene().getWindow());
         } catch (Exception e) {
             log.warning("Could not open preferences: " + e.getMessage());
         }
@@ -704,6 +710,14 @@ public class MainController implements Initializable {
     private void onRolesChanged() {
         if (cardController != null) cardController.refreshRoles();
         if (showingOverview && !brothers.isEmpty()) showOverview();
+    }
+
+    /** How many loaded brothers are assigned to the given role (for the delete confirmation). */
+    private long countBrothersAssignedTo(String roleId) {
+        return brothers.stream()
+                .filter(b -> b.fingerprint != null)
+                .filter(b -> roleId.equals(uiCtx.annotation().get(b.fingerprint).roleId))
+                .count();
     }
 
     private void resortBrotherList() {
@@ -743,11 +757,7 @@ public class MainController implements Initializable {
     }
 
     private void showError(String header, String message) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setHeaderText(header);
-            alert.setContentText(message);
-            alert.showAndWait();
-        });
+        Platform.runLater(() ->
+                Modals.error(centerPane.getScene().getWindow(), "Error", header, message));
     }
 }

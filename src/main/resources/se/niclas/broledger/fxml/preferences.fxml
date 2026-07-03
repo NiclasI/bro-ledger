@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox styleClass="app-frame,modal-frame" minWidth="420" minHeight="200"
+<VBox styleClass="app-frame" minWidth="420" minHeight="200"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="se.niclas.broledger.ui.PreferencesController">
 

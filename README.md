@@ -87,6 +87,23 @@ Roles are user-defined categories applied to brothers to track roster compositio
 - Roles are identified by a stable UUID — renaming a role updates all brothers that have it already
 - Role data is shared across all save files and stored in `~/.bro-ledger/roles.json`
 
+#### Sharing roles
+
+The Role Manager's **Share…** and **Import…** buttons let you publish a curated set of roles to a
+lightweight public store and hand someone else a short code to pull them in:
+
+- **Share…** — pick which roles to include from a checklist (all checked by default), optionally
+  name the pack, and publish. The returned code is shown and copied to your clipboard.
+- **Import…** — paste a code to fetch the pack, then pick which of its roles to add from the same
+  kind of checklist. Codes are case-insensitive. Imported roles get a fresh ID, so duplicate names
+  are harmless.
+
+Shared packs expire after 90 days without being fetched; any fetch resets the clock.
+
+This is the app's only network feature and is entirely **opt-in** — nothing is uploaded unless you
+click Share, and the app works fully offline otherwise. Codes are unguessable but not private: the
+store is public-by-code, so don't share codes for role names you'd consider sensitive.
+
 ### Bro Developer (Expected Stats)
 
 Plan a brother's level-up path and see realistic projected final values:

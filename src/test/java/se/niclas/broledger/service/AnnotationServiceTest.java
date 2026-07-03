@@ -74,6 +74,56 @@ class AnnotationServiceTest {
     }
 
     @Test
+    void clearRoleRefsClearsMatchingEntriesAndPersists() {
+        service.setRole("A", "uuid-tank");
+        service.setRole("B", "uuid-tank");
+        service.setRole("C", "uuid-archer");
+
+        List<String> affected = service.clearRoleRefs("uuid-tank");
+
+        assertEquals(List.of("A", "B"), affected);
+        assertNull(service.get("A").roleId);
+        assertNull(service.get("B").roleId);
+        assertEquals("uuid-archer", service.get("C").roleId);
+
+        service.loadFor(savePath);
+        assertNull(service.get("A").roleId);
+        assertEquals("uuid-archer", service.get("C").roleId);
+    }
+
+    @Test
+    void clearRoleRefsNoOpForNullOrUnusedRole() {
+        service.setRole("A", "uuid-tank");
+        assertTrue(service.clearRoleRefs(null).isEmpty());
+        assertTrue(service.clearRoleRefs("uuid-unused").isEmpty());
+        assertEquals("uuid-tank", service.get("A").roleId);
+    }
+
+    @Test
+    void clearDanglingRoleRefsClearsUnknownKeepsValid() {
+        service.setRole("A", "uuid-tank");
+        service.setRole("B", "uuid-deleted");
+        service.setRole("C", "uuid-also-deleted");
+
+        List<String> affected = service.clearDanglingRoleRefs(java.util.Set.of("uuid-tank"));
+
+        assertEquals(List.of("B", "C"), affected);
+        assertEquals("uuid-tank", service.get("A").roleId);
+        assertNull(service.get("B").roleId);
+        assertNull(service.get("C").roleId);
+
+        service.loadFor(savePath);
+        assertNull(service.get("B").roleId);
+    }
+
+    @Test
+    void clearDanglingRoleRefsEmptyWhenAllValid() {
+        service.setRole("A", "uuid-tank");
+        assertTrue(service.clearDanglingRoleRefs(java.util.Set.of("uuid-tank")).isEmpty());
+        assertEquals("uuid-tank", service.get("A").roleId);
+    }
+
+    @Test
     void keeperJsonCreatedAdjacentToSave() {
         service.setRole("FP003", "uuid-scout");
         Path expected = savePath.resolveSibling(savePath.getFileName() + ".broledger.json");

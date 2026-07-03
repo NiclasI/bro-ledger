@@ -46,7 +46,7 @@ public class AnnotationService {
     private UiState uiState = new UiState();
 
     // Resolved paths for the current save
-    private Path primaryPath;    // <save>.keeper.json
+    private Path primaryPath;    // <save>.broledger.json
     private Path fallbackPath;   // ~/.bro-ledger/annotations-<hash>.json
 
     private AnnotationService() {}
@@ -85,6 +85,38 @@ public class AnnotationService {
     public void setRole(String fingerprint, String roleId) {
         get(fingerprint).roleId = roleId;
         flush();
+    }
+
+    /**
+     * Clears every annotation's role reference to {@code roleId} — called right after that
+     * role is deleted, so the loaded save never holds a dangling reference.
+     * Returns the affected fingerprints; flushes once when any were cleared.
+     */
+    public List<String> clearRoleRefs(String roleId) {
+        if (roleId == null) return List.of();
+        return clearRoleRefsMatching(roleId::equals);
+    }
+
+    /**
+     * Clears role references that point outside {@code validRoleIds} — repairs annotations
+     * whose role was deleted while this save was not loaded.
+     * Returns the affected fingerprints; flushes once when any were cleared.
+     */
+    public List<String> clearDanglingRoleRefs(java.util.Set<String> validRoleIds) {
+        return clearRoleRefsMatching(id -> !validRoleIds.contains(id));
+    }
+
+    private List<String> clearRoleRefsMatching(java.util.function.Predicate<String> shouldClear) {
+        List<String> affected = new ArrayList<>();
+        for (Map.Entry<String, BrotherAnnotation> e : store.entrySet()) {
+            String roleId = e.getValue().roleId;
+            if (roleId != null && shouldClear.test(roleId)) {
+                e.getValue().roleId = null;
+                affected.add(e.getKey());
+            }
+        }
+        if (!affected.isEmpty()) flush();
+        return affected;
     }
 
     /** Store the planned level-up increases (lv 1–11) for this brother (null = clear all). */

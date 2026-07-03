@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox styleClass="app-frame,modal-frame" minWidth="540" minHeight="340"
+<VBox styleClass="app-frame" minWidth="540" minHeight="340"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="se.niclas.broledger.ui.SetupController">
 
@@ -37,7 +37,7 @@
 
             <HBox spacing="8" alignment="CENTER_LEFT">
                 <Label text="data_001.dat:" styleClass="field-label" minWidth="110"/>
-                <TextField fx:id="datPathField" styleClass="role-field"
+                <TextField fx:id="datPathField"
                            promptText="Select data_001.dat…"
                            HBox.hgrow="ALWAYS" maxWidth="Infinity" editable="false"/>
                 <Button text="Browse" onAction="#browseDat" styleClass="fancy-btn" minWidth="70"/>
@@ -45,7 +45,7 @@
 
             <HBox spacing="8" alignment="CENTER_LEFT">
                 <Label text="Output folder:" styleClass="field-label" minWidth="110"/>
-                <TextField fx:id="outDirField" styleClass="role-field"
+                <TextField fx:id="outDirField"
                            promptText="Output directory…"
                            HBox.hgrow="ALWAYS" maxWidth="Infinity" editable="false"/>
                 <Button text="Browse" onAction="#browseOutDir" styleClass="fancy-btn" minWidth="70"/>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox styleClass="app-frame" minWidth="440" minHeight="420"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="se.niclas.broledger.ui.RoleImportController">
+
+    <HBox fx:id="titleBar" styleClass="title-bar" alignment="CENTER_LEFT">
+        <Label text="Import Roles" styleClass="title-bar-label"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="✕" styleClass="window-btn,window-btn-close" onAction="#close" focusTraversable="false"/>
+    </HBox>
+
+    <VBox spacing="12" VBox.vgrow="ALWAYS">
+        <padding><Insets top="16" right="20" bottom="16" left="20"/></padding>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Code:" styleClass="field-label" minWidth="90"/>
+            <TextField fx:id="codeField" promptText="e.g. AB3D9F2K" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Button fx:id="fetchButton" text="Fetch" onAction="#fetch" styleClass="fancy-btn"/>
+        </HBox>
+
+        <Label fx:id="statusLabel" wrapText="true" styleClass="dim-label"/>
+
+        <Label fx:id="packTitleLabel" wrapText="true" styleClass="pack-title" visible="false" managed="false"/>
+
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Roles to import:" styleClass="section-header"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Select All" onAction="#selectAllRoles" styleClass="fancy-btn"/>
+            <Button text="Select None" onAction="#selectNoneRoles" styleClass="fancy-btn"/>
+        </HBox>
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" hbarPolicy="NEVER" styleClass="modal-scroll">
+            <VBox fx:id="roleCheckContainer" spacing="4">
+                <padding><Insets top="4" right="4" bottom="4" left="4"/></padding>
+            </VBox>
+        </ScrollPane>
+
+        <HBox spacing="8" alignment="CENTER_RIGHT">
+            <Button fx:id="importButton" text="Import" onAction="#doImport" styleClass="fancy-btn" disable="true"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Close" onAction="#close" styleClass="fancy-btn"/>
+        </HBox>
+    </VBox>
+
+</VBox>

@@ -119,4 +119,24 @@ class MainControllerTest {
         b.backgroundHexId = "B47205E5"; // Killer on the run
         assertTrue(MainController.isValid(b));
     }
+
+    // ---- danglingRoleMessage ------------------------------------------------
+
+    @Test
+    void danglingRoleMessage_listsAllNamesWhenFiveOrFewer() {
+        String msg = MainController.danglingRoleMessage(java.util.List.of("Horik", "Sten"));
+        assertTrue(msg.startsWith("2 brother(s)"));
+        assertTrue(msg.contains("Horik, Sten"));
+        assertFalse(msg.contains("more"));
+    }
+
+    @Test
+    void danglingRoleMessage_capsAtFiveNames() {
+        var names = java.util.List.of("A", "B", "C", "D", "E", "F", "G");
+        String msg = MainController.danglingRoleMessage(names);
+        assertTrue(msg.startsWith("7 brother(s)"));
+        assertTrue(msg.contains("A, B, C, D, E"));
+        assertTrue(msg.contains("+2 more"));
+        assertFalse(msg.contains("F"));
+    }
 }

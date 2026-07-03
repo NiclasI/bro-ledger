@@ -1,5 +1,6 @@
 package se.niclas.broledger.service;
 
+import se.niclas.broledger.model.ShareRecord;
 import se.niclas.broledger.model.Stat;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
@@ -53,6 +54,16 @@ public class AppConfig {
      * overwrite is reconciled. Disabled by default. Use ReplayAnalyzer to inspect the sequence.
      */
     public boolean replayCaptureEnabled = false;
+    /**
+     * Most-recent-first history of role packs published from this machine, capped at
+     * {@link #RECENT_SHARES_MAX}. Each entry carries the server-issued owner token that
+     * authorizes updating its code — entries that roll off the cap lose that ability
+     * permanently (the fallback is always publishing a new code).
+     */
+    public List<ShareRecord> recentShares;
+
+    /** How many published packs stay updateable from this machine. */
+    public static final int RECENT_SHARES_MAX = 5;
 
     private AppConfig() {}
 
@@ -116,6 +127,21 @@ public class AppConfig {
         } catch (Exception e) {
             log.warning("AppConfig: could not save config — " + e.getMessage());
             try { Files.deleteIfExists(tmp); } catch (Exception ignored) {}
+        }
+    }
+
+    /**
+     * Records a publish or update in {@link #recentShares}: an existing entry with the
+     * same code is replaced and moved to the top (an update refreshes title/timestamp
+     * without duplicating), and the list is trimmed to {@link #RECENT_SHARES_MAX}.
+     * The caller is responsible for {@link #save()}.
+     */
+    public void recordShare(ShareRecord record) {
+        if (recentShares == null) recentShares = new ArrayList<>();
+        recentShares.removeIf(r -> r == null || (record.code != null && record.code.equals(r.code)));
+        recentShares.add(0, record);
+        while (recentShares.size() > RECENT_SHARES_MAX) {
+            recentShares.remove(recentShares.size() - 1);
         }
     }
 

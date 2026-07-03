@@ -1,6 +1,7 @@
 package se.niclas.broledger.service;
 
 import se.niclas.broledger.model.Role;
+import se.niclas.broledger.model.RolePack;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -81,6 +82,20 @@ public class RoleService {
         return id != null ? store.get(id) : null;
     }
 
+    /**
+     * The local role previously imported from {@code packCode} as the sender's
+     * {@code sourceRoleId}, or null when there is no such import (or either arg is null).
+     */
+    public Role findBySource(String packCode, String sourceRoleId) {
+        if (packCode == null || sourceRoleId == null) return null;
+        for (Role r : store.values()) {
+            if (packCode.equals(r.sourcePackCode) && sourceRoleId.equals(r.sourceRoleId)) {
+                return r;
+            }
+        }
+        return null;
+    }
+
     // ---- mutations ---------------------------------------------------------
 
     public Role add(String name, boolean frontline) {
@@ -95,6 +110,41 @@ public class RoleService {
         cfg.save();
         flush();
         return r;
+    }
+
+    /**
+     * Imports the {@code selected} subset of a fetched role pack. A role previously imported
+     * from the same pack (matched by {@code sourcePackCode} + the sender's role id) is
+     * updated <em>in place</em> — keeping its local UUID, so brothers' assignments follow the
+     * update. Otherwise a new role is created with a fresh UUID (never reusing the sender's
+     * id, so name collisions are harmless) and its provenance recorded for future re-imports.
+     */
+    public List<Role> importPack(RolePack pack, List<Role> selected, String sourcePackCode) {
+        List<Role> affected = new ArrayList<>();
+        if (pack == null || selected == null || selected.isEmpty()) return affected;
+
+        AppConfig cfg = AppConfig.getInstance();
+        if (cfg.roleOrder == null) cfg.roleOrder = new ArrayList<>();
+
+        for (Role src : selected) {
+            Role existing = findBySource(sourcePackCode, src.id);
+            if (existing != null) {
+                Role.copyContentInto(src, existing);
+                affected.add(existing);
+                continue;
+            }
+            Role r = new Role();
+            r.id = UUID.randomUUID().toString();
+            Role.copyContentInto(src, r);
+            r.sourcePackCode = sourcePackCode;
+            r.sourceRoleId   = src.id;
+            store.put(r.id, r);
+            cfg.roleOrder.add(r.id);
+            affected.add(r);
+        }
+        cfg.save();
+        flush();
+        return affected;
     }
 
     public void update(Role role) {

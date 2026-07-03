@@ -1,7 +1,9 @@
 package se.niclas.broledger.ui;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -19,8 +21,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
+import java.util.function.Function;
+import java.util.logging.Logger;
 
 public class RoleManagerController implements Initializable {
+
+    private static final Logger log = Logger.getLogger(RoleManagerController.class.getName());
 
     @FXML private HBox            titleBar;
     @FXML private ListView<Role>  roleList;
@@ -40,6 +46,8 @@ public class RoleManagerController implements Initializable {
     private double dragOffsetX, dragOffsetY;
     private Runnable onRolesChanged;
     private UiContext uiContext;
+    /** Counts loaded brothers assigned to a role id; null when no save context is available. */
+    private Function<String, Long> roleUsageCounter;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -85,6 +93,10 @@ public class RoleManagerController implements Initializable {
         this.onRolesChanged = callback;
     }
 
+    public void setRoleUsageCounter(Function<String, Long> counter) {
+        this.roleUsageCounter = counter;
+    }
+
     public void setUiContext(UiContext ctx) {
         this.uiContext = ctx;
         if (perkPlanPane != null) return; // pane already built; singletons are the same
@@ -113,10 +125,34 @@ public class RoleManagerController implements Initializable {
     private void deleteRole() {
         Role selected = roleList.getSelectionModel().getSelectedItem();
         if (selected == null) return;
+
+        Long assigned = roleUsageCounter != null ? roleUsageCounter.apply(selected.id) : null;
+        boolean confirmed = Modals.confirm(roleList.getScene().getWindow(), "Delete Role",
+                "Delete role \"" + selected.name + "\"?", deleteConfirmationText(assigned), "Delete");
+        if (!confirmed) return;
+
         RoleService.getInstance().delete(selected.id);
+        // Clear the loaded save's references immediately; other saves are repaired
+        // (with a notification) when they are next loaded.
+        uiContext.annotation().clearRoleRefs(selected.id);
         refreshList(null);
         setFormDisabled(true);
         notifyChanged();
+    }
+
+    /** Confirmation body; {@code assigned} is the loaded-save usage count, or null when unknown. */
+    static String deleteConfirmationText(Long assigned) {
+        String usage;
+        if (assigned == null) {
+            usage = "Any brothers assigned to it will lose the assignment.";
+        } else if (assigned == 0) {
+            usage = "No brothers in the current save are assigned to it.";
+        } else {
+            usage = "It is assigned to " + assigned + " brother(s) in the current save — "
+                    + "their assignment will be cleared.";
+        }
+        return usage + "\n\nAssignments in other saves are cleared when those saves are"
+                + " next loaded. This cannot be undone.";
     }
 
     @FXML
@@ -171,6 +207,39 @@ public class RoleManagerController implements Initializable {
         ((Stage) nameField.getScene().getWindow()).close();
     }
 
+    @FXML
+    private void openShareDialog() {
+        try {
+            URL fxml = getClass().getResource("/se/niclas/broledger/fxml/role-share-dialog.fxml");
+            if (fxml == null) return;
+            FXMLLoader loader = new FXMLLoader(fxml);
+            Parent root = loader.load();
+            RoleShareController ctrl = loader.getController();
+            ctrl.setRoles(RoleService.getInstance().getAll());
+            Modals.showModal(root, nameField.getScene().getWindow());
+        } catch (Exception e) {
+            log.warning("Could not open share dialog: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void openImportDialog() {
+        try {
+            URL fxml = getClass().getResource("/se/niclas/broledger/fxml/role-import-dialog.fxml");
+            if (fxml == null) return;
+            FXMLLoader loader = new FXMLLoader(fxml);
+            Parent root = loader.load();
+            RoleImportController ctrl = loader.getController();
+            ctrl.setOnImported(() -> {
+                refreshList(null);
+                notifyChanged();
+            });
+            Modals.showModal(root, nameField.getScene().getWindow());
+        } catch (Exception e) {
+            log.warning("Could not open import dialog: " + e.getMessage());
+        }
+    }
+
     // ---- helpers -----------------------------------------------------------
 
     private void buildStatEditorGrid() {
@@ -196,7 +265,6 @@ public class RoleManagerController implements Initializable {
             name.setMinWidth(100);
 
             TextField tf = new TextField();
-            tf.getStyleClass().add("target-field");
             tf.setPrefWidth(60);
             tf.setPromptText("—");
             targetFields[idx] = tf;

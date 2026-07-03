@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox styleClass="app-frame" minWidth="440" minHeight="520"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="se.niclas.broledger.ui.RoleShareController">
+
+    <HBox fx:id="titleBar" styleClass="title-bar" alignment="CENTER_LEFT">
+        <Label text="Share Roles" styleClass="title-bar-label"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="✕" styleClass="window-btn,window-btn-close" onAction="#close" focusTraversable="false"/>
+    </HBox>
+
+    <VBox spacing="12" VBox.vgrow="ALWAYS">
+        <padding><Insets top="16" right="20" bottom="16" left="20"/></padding>
+
+        <Label text="Uploads the selected roles' names, targets, and perk plans to an unlisted public store. Anyone with the code can view them." wrapText="true" styleClass="dim-label"/>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Title:" styleClass="field-label" minWidth="90"/>
+            <TextField fx:id="packNameField" promptText="Optional title" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+        </HBox>
+
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Roles to include:" styleClass="section-header"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Select All" onAction="#selectAllRoles" styleClass="fancy-btn"/>
+            <Button text="Select None" onAction="#selectNoneRoles" styleClass="fancy-btn"/>
+        </HBox>
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" hbarPolicy="NEVER" styleClass="modal-scroll">
+            <VBox fx:id="roleCheckContainer" spacing="4">
+                <padding><Insets top="4" right="4" bottom="4" left="4"/></padding>
+            </VBox>
+        </ScrollPane>
+
+        <VBox fx:id="recentBox" spacing="4">
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Recent uploads (this computer):" styleClass="section-header"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="newCodeButton" text="New code" onAction="#newCode" styleClass="fancy-btn" visible="false" managed="false"/>
+            </HBox>
+            <Label text="Select one to publish the checked roles to the same code." wrapText="true" styleClass="dim-label"/>
+            <ListView fx:id="recentList" prefHeight="110" minHeight="110"/>
+        </VBox>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Code:" styleClass="field-label" minWidth="90"/>
+            <TextField fx:id="codeField" editable="false" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Button text="Copy" onAction="#copyCode" styleClass="fancy-btn"/>
+        </HBox>
+
+        <Label fx:id="statusLabel" wrapText="true" styleClass="dim-label"/>
+
+        <HBox spacing="8" alignment="CENTER_RIGHT">
+            <Button fx:id="shareButton" text="Share" onAction="#share" styleClass="fancy-btn"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Close" onAction="#close" styleClass="fancy-btn"/>
+        </HBox>
+    </VBox>
+
+</VBox>

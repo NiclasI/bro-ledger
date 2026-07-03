@@ -2,6 +2,7 @@ package se.niclas.broledger.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import se.niclas.broledger.model.ShareRecord;
 import se.niclas.broledger.model.Stat;
 
 import java.nio.file.Files;
@@ -157,6 +158,67 @@ class AppConfigTest {
         assertEquals(8, result.length);
         assertEquals(Stat.HEALTH,  result[0]);
         assertEquals(Stat.RESOLVE, result[1]);
+    }
+
+    // ---- recentShares -------------------------------------------------------
+
+    private static ShareRecord share(String code, String title) {
+        return new ShareRecord(code, "token-" + code, title, "2026-07-05T12:00:00Z", 3);
+    }
+
+    @Test
+    void recordShare_capsAtMaxDroppingOldest() {
+        AppConfig cfg = fresh();
+        for (int i = 1; i <= AppConfig.RECENT_SHARES_MAX + 1; i++) {
+            cfg.recordShare(share("CODE000" + i, "Pack " + i));
+        }
+        assertEquals(AppConfig.RECENT_SHARES_MAX, cfg.recentShares.size());
+        // Most recent first; the very first share rolled off.
+        assertEquals("CODE0006", cfg.recentShares.get(0).code);
+        assertTrue(cfg.recentShares.stream().noneMatch(r -> r.code.equals("CODE0001")));
+    }
+
+    @Test
+    void recordShare_sameCodeMovesToTopWithoutDuplicate() {
+        AppConfig cfg = fresh();
+        cfg.recordShare(share("CODEAAAA", "First"));
+        cfg.recordShare(share("CODEBBBB", "Second"));
+        cfg.recordShare(share("CODEAAAA", "First v2"));
+
+        assertEquals(2, cfg.recentShares.size());
+        assertEquals("CODEAAAA", cfg.recentShares.get(0).code);
+        assertEquals("First v2", cfg.recentShares.get(0).title);
+        assertEquals("CODEBBBB", cfg.recentShares.get(1).code);
+    }
+
+    @Test
+    void recentShares_roundTrip() {
+        Path file = tmp.resolve("config.json");
+
+        AppConfig written = fresh();
+        written.recordShare(new ShareRecord("AB3D9F2K", "cafe0123", "My Pack",
+                "2026-07-05T12:00:00Z", 4));
+        written.saveTo(file);
+
+        AppConfig read = fresh();
+        read.loadFrom(file);
+
+        assertNotNull(read.recentShares);
+        assertEquals(1, read.recentShares.size());
+        ShareRecord r = read.recentShares.get(0);
+        assertEquals("AB3D9F2K", r.code);
+        assertEquals("cafe0123", r.ownerToken);
+        assertEquals("My Pack", r.title);
+        assertEquals("2026-07-05T12:00:00Z", r.uploadedAt);
+        assertEquals(4, r.roleCount);
+        assertTrue(r.updatable());
+    }
+
+    @Test
+    void recordShare_tokenlessEntryIsNotUpdatable() {
+        AppConfig cfg = fresh();
+        cfg.recordShare(new ShareRecord("AB3D9F2K", null, "Old", "2026-07-05T12:00:00Z", 1));
+        assertFalse(cfg.recentShares.get(0).updatable());
     }
 
     // ---- statAbbrevFromColumnId -------------------------------------------

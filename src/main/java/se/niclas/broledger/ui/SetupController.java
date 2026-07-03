@@ -5,9 +5,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
@@ -79,22 +77,15 @@ public class SetupController implements Initializable {
         if (dir == null) return;
 
         if (!dir.getName().equals("game-art")) {
-            ButtonType useSubfolder = new ButtonType("Create 'game-art' subfolder");
-            ButtonType useAsIs      = new ButtonType("Use selected folder");
-            Alert alert = new Alert(Alert.AlertType.NONE,
+            int choice = Modals.choice(titleBar.getScene().getWindow(), "Confirm output folder", null,
                     "The selected folder is '" + dir.getName() + "'.\n\n" +
                     "Create a 'game-art' subfolder inside it to keep extracted files organized?",
-                    useSubfolder, useAsIs);
-            alert.setTitle("Confirm output folder");
-            alert.setHeaderText(null);
-            alert.initOwner(titleBar.getScene().getWindow());
-            alert.showAndWait().ifPresent(bt -> {
-                if (bt == useSubfolder) {
-                    outDirField.setText(dir.toPath().resolve("game-art").toString());
-                } else {
-                    outDirField.setText(dir.getAbsolutePath());
-                }
-            });
+                    "Create 'game-art' subfolder", "Use selected folder");
+            if (choice == 0) {
+                outDirField.setText(dir.toPath().resolve("game-art").toString());
+            } else if (choice == 1) {
+                outDirField.setText(dir.getAbsolutePath());
+            } // choice == -1 (dismissed via ✕): leave outDirField untouched, matching the old Alert's behavior
         } else {
             outDirField.setText(dir.getAbsolutePath());
         }

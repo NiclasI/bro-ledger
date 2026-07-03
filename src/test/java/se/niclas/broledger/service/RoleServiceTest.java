@@ -4,10 +4,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import se.niclas.broledger.model.Role;
+import se.niclas.broledger.model.RolePack;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -195,5 +197,163 @@ class RoleServiceTest {
 
         List<String> order = AppConfig.getInstance().roleOrder;
         assertEquals(List.of(a.id, b.id), order);
+    }
+
+    // ---- importPack ---------------------------------------------------------
+
+    private static Role packRole(String name, boolean frontline) {
+        Role r = new Role();
+        r.id = "sender-id-" + name;
+        r.name = name;
+        r.frontline = frontline;
+        r.targetStats = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
+        r.priority = new int[]{1, 1, 2, 2, 3, 3, 1, 2};
+        r.perkPlanTemplate = new LinkedHashMap<>(java.util.Map.of("00000001", "PLANNED"));
+        return r;
+    }
+
+    @Test
+    void importPackMintsFreshUuidsAndPreservesFields() {
+        Role incoming = packRole("Tank", true);
+        RolePack pack = new RolePack("Test Pack", List.of(incoming));
+
+        List<Role> imported = service.importPack(pack, List.of(incoming), "AB3D9F2K");
+
+        assertEquals(1, imported.size());
+        Role r = imported.get(0);
+        assertNotEquals(incoming.id, r.id);
+        assertEquals("Tank", r.name);
+        assertTrue(r.frontline);
+        assertArrayEquals(incoming.targetStats, r.targetStats);
+        assertArrayEquals(incoming.priority, r.priority);
+        assertEquals(incoming.perkPlanTemplate, r.perkPlanTemplate);
+    }
+
+    @Test
+    void importPackAppendsToRoleOrder() {
+        Role incoming = packRole("Archer", false);
+        RolePack pack = new RolePack(null, List.of(incoming));
+
+        List<Role> imported = service.importPack(pack, List.of(incoming), "AB3D9F2K");
+
+        assertEquals(List.of(imported.get(0).id), AppConfig.getInstance().roleOrder);
+        assertEquals(1, service.getAll().size());
+    }
+
+    @Test
+    void importPackOnlyImportsSelectedSubset() {
+        Role tank = packRole("Tank", true);
+        Role archer = packRole("Archer", false);
+        RolePack pack = new RolePack(null, List.of(tank, archer));
+
+        List<Role> imported = service.importPack(pack, List.of(tank), "AB3D9F2K");
+
+        assertEquals(1, imported.size());
+        assertEquals("Tank", imported.get(0).name);
+        assertEquals(1, service.getAll().size());
+    }
+
+    @Test
+    void importPackToleratesDuplicateNames() {
+        Role existing = service.add("Tank", true);
+        Role incoming = packRole("Tank", true);
+        RolePack pack = new RolePack(null, List.of(incoming));
+
+        List<Role> imported = service.importPack(pack, List.of(incoming), "AB3D9F2K");
+
+        assertEquals(2, service.getAll().size());
+        assertNotEquals(existing.id, imported.get(0).id);
+    }
+
+    @Test
+    void importPackWithEmptySelectionImportsNothing() {
+        Role incoming = packRole("Tank", true);
+        RolePack pack = new RolePack(null, List.of(incoming));
+
+        List<Role> imported = service.importPack(pack, List.of(), "AB3D9F2K");
+
+        assertTrue(imported.isEmpty());
+        assertTrue(service.getAll().isEmpty());
+    }
+
+    // ---- provenance / update-in-place ----------------------------------------
+
+    @Test
+    void importPackRecordsProvenance() {
+        Role incoming = packRole("Tank", true);
+        RolePack pack = new RolePack(null, List.of(incoming));
+
+        Role imported = service.importPack(pack, List.of(incoming), "AB3D9F2K").get(0);
+
+        assertEquals("AB3D9F2K", imported.sourcePackCode);
+        assertEquals(incoming.id, imported.sourceRoleId);
+    }
+
+    @Test
+    void reimportFromSameCodeUpdatesInPlace() {
+        Role v1 = packRole("Tank", true);
+        Role first = service.importPack(new RolePack(null, List.of(v1)), List.of(v1), "AB3D9F2K").get(0);
+
+        Role v2 = packRole("Tank v2", false);
+        v2.id = v1.id; // sender's role id is stable across pack updates
+        v2.targetStats = new int[]{9, 9, 9, 9, 9, 9, 9, 9};
+        Role second = service.importPack(new RolePack(null, List.of(v2)), List.of(v2), "AB3D9F2K").get(0);
+
+        // Same local role, updated content, no duplicate, order untouched.
+        assertEquals(first.id, second.id);
+        assertEquals("Tank v2", service.getById(first.id).name);
+        assertFalse(service.getById(first.id).frontline);
+        assertArrayEquals(v2.targetStats, service.getById(first.id).targetStats);
+        assertEquals(1, service.getAll().size());
+        assertEquals(List.of(first.id), AppConfig.getInstance().roleOrder);
+        // Provenance survives the in-place update.
+        assertEquals("AB3D9F2K", second.sourcePackCode);
+        assertEquals(v1.id, second.sourceRoleId);
+    }
+
+    @Test
+    void reimportFromDifferentCodeCreatesDuplicate() {
+        Role incoming = packRole("Tank", true);
+        service.importPack(new RolePack(null, List.of(incoming)), List.of(incoming), "AB3D9F2K");
+        service.importPack(new RolePack(null, List.of(incoming)), List.of(incoming), "ZZ3D9F2K");
+
+        assertEquals(2, service.getAll().size());
+    }
+
+    @Test
+    void importWithNullCodeNeverMatchesAndRecordsNoPackCode() {
+        Role incoming = packRole("Tank", true);
+        Role a = service.importPack(new RolePack(null, List.of(incoming)), List.of(incoming), null).get(0);
+        Role b = service.importPack(new RolePack(null, List.of(incoming)), List.of(incoming), null).get(0);
+
+        assertNotEquals(a.id, b.id);
+        assertEquals(2, service.getAll().size());
+        assertNull(a.sourcePackCode);
+    }
+
+    @Test
+    void findBySourceMatchesOnlyExactPair() {
+        Role incoming = packRole("Tank", true);
+        Role imported = service.importPack(
+                new RolePack(null, List.of(incoming)), List.of(incoming), "AB3D9F2K").get(0);
+
+        assertEquals(imported, service.findBySource("AB3D9F2K", incoming.id));
+        assertNull(service.findBySource("ZZ3D9F2K", incoming.id));
+        assertNull(service.findBySource("AB3D9F2K", "other-sender-id"));
+        assertNull(service.findBySource(null, incoming.id));
+        assertNull(service.findBySource("AB3D9F2K", null));
+    }
+
+    @Test
+    void provenancePersistsAcrossReload() {
+        Role incoming = packRole("Tank", true);
+        Role imported = service.importPack(
+                new RolePack(null, List.of(incoming)), List.of(incoming), "AB3D9F2K").get(0);
+
+        service = RoleService.createForTest(rolesFile);
+
+        Role reloaded = service.getById(imported.id);
+        assertEquals("AB3D9F2K", reloaded.sourcePackCode);
+        assertEquals(incoming.id, reloaded.sourceRoleId);
     }
 }

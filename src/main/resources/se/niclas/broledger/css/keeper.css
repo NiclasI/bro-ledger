@@ -13,6 +13,36 @@
     -fx-effect: dropshadow(gaussian, #d69f23, 18, 0.4, 0, 0);
 }
 
+/* ===== Base button ===== */
+
+/* Same look as .fancy-btn, applied to every plain <Button> by default so new dialogs don't need
+   to remember a class. Declared here (before .window-btn/.title-bar/.prio-toggle below) so those
+   more specific-in-intent classes still win by source order at equal CSS specificity. */
+.button {
+    -fx-background-color: linear-gradient(to bottom, #4a3018, #2d1d0c);
+    -fx-border-color: #6a4a28 #3a2510 #2a1a08 #5a3a18;
+    -fx-border-width: 1;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-padding: 5 14 5 14;
+    -fx-cursor: hand;
+    -fx-min-width: 80;
+    -fx-text-fill: #d69f23;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 3, 0, 1, 1);
+}
+
+.button:hover {
+    -fx-background-color: linear-gradient(to bottom, #5a3a20, #3a2510);
+}
+
+.button:pressed {
+    -fx-background-color: linear-gradient(to bottom, #2d1d0c, #4a3018);
+    -fx-border-color: #2a1a08 #6a4a28 #5a3a18 #3a2510;
+    -fx-effect: none;
+}
+
 .title-bar {
     -fx-background-color: #050302;
     -fx-padding: 0 0 0 10;
@@ -410,8 +440,10 @@
     -fx-font-size: 12px;
 }
 
-.role-field,
-.target-field {
+/* Base look for every text field/area in the app — dialogs no longer need to opt in with a
+   named class to get the dark amber field look; a plain <TextField> is already correct. */
+.text-field,
+.text-area {
     -fx-background-color: #120d05;
     -fx-text-fill: #d69f23;
     -fx-border-color: #3a2510;
@@ -420,8 +452,8 @@
     -fx-prompt-text-fill: #4a3820;
 }
 
-.role-field:focused,
-.target-field:focused {
+.text-field:focused,
+.text-area:focused {
     -fx-border-color: #ba9238;
 }
 
@@ -826,22 +858,20 @@
     -fx-text-fill: #c87820;
 }
 
-/* ===== Alerts ===== */
-
-.dialog-pane {
-    -fx-background-color: #1a1209;
+.dim-label {
+    -fx-text-fill: #8a7040;
+    -fx-font-size: 11px;
 }
 
-.dialog-pane .content.label {
-    -fx-text-fill: #d69f23;
+.dim-label.warning {
+    -fx-text-fill: #c87820;
 }
 
-.dialog-pane .header-panel {
-    -fx-background-color: #0f0a04;
-}
-
-.dialog-pane .header-panel .label {
-    -fx-text-fill: #d69f23;
+/* Fetched pack title in the import dialog */
+.pack-title {
+    -fx-text-fill: #d4b060;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
 }
 
 /* ===== Fancy toolbar buttons ===== */

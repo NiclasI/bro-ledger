@@ -7,12 +7,12 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import se.niclas.broledger.service.AppConfig;
 import se.niclas.broledger.service.AssetExtractor;
+import se.niclas.broledger.ui.Modals;
 import se.niclas.broledger.ui.SetupController;
 import se.niclas.broledger.service.DictionaryService;
 import se.niclas.broledger.service.ImageMapService;
@@ -125,16 +125,7 @@ public class App extends Application {
             SetupController ctrl = loader.getController();
             ctrl.setOutdated(outdated);
 
-            Stage dialog = new Stage();
-            dialog.initStyle(StageStyle.UNDECORATED);
-            dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.initOwner(owner);
-
-            Scene scene = new Scene(root);
-            URL css = App.class.getResource("/se/niclas/broledger/css/keeper.css");
-            if (css != null) scene.getStylesheets().add(css.toExternalForm());
-            dialog.setScene(scene);
-            dialog.showAndWait();
+            Modals.showModal(root, owner);
 
         } catch (Exception e) {
             log.warning("Could not open setup dialog: " + e.getMessage());
