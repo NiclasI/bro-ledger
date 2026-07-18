@@ -65,7 +65,10 @@ public class RoleShareService {
     }
 
     public static RoleShareService getInstance() {
-        if (instance == null) instance = new RoleShareService(DEFAULT_BASE_URL);
+        if (instance == null) {
+            String override = System.getProperty("broledger.roleShareBaseUrl");
+            instance = new RoleShareService(override != null && !override.isBlank() ? override : DEFAULT_BASE_URL);
+        }
         return instance;
     }
 

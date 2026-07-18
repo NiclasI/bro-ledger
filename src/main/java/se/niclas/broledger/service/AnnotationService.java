@@ -3,6 +3,7 @@ package se.niclas.broledger.service;
 import se.niclas.broledger.model.Brother;
 import se.niclas.broledger.model.BrotherAnnotation;
 import se.niclas.broledger.model.Stat;
+import se.niclas.broledger.util.AppPaths;
 import se.niclas.broledger.util.HexUtils;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -35,7 +36,7 @@ public class AnnotationService {
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .build();
 
-    private static final Path FALLBACK_DIR = Path.of(System.getProperty("user.home"), ".bro-ledger");
+    private static final Path FALLBACK_DIR = AppPaths.dataDir();
 
     private static AnnotationService instance;
 

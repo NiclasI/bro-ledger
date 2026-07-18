@@ -2,6 +2,7 @@ package se.niclas.broledger.service;
 
 import se.niclas.broledger.model.ShareRecord;
 import se.niclas.broledger.model.Stat;
+import se.niclas.broledger.util.AppPaths;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -21,7 +22,7 @@ import java.util.logging.Logger;
  */
 public class AppConfig {
 
-    private static final Path CONFIG_DIR  = Path.of(System.getProperty("user.home"), ".bro-ledger");
+    private static final Path CONFIG_DIR  = AppPaths.dataDir();
     private static final Path CONFIG_FILE = CONFIG_DIR.resolve("config.json");
 
     private static final Logger log = Logger.getLogger(AppConfig.class.getName());

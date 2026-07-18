@@ -1,6 +1,7 @@
 package se.niclas.broledger.service;
 
 import se.niclas.broledger.AppInfo;
+import se.niclas.broledger.util.AppPaths;
 import se.niclas.broledger.util.HexUtils;
 
 import java.io.IOException;
@@ -44,7 +45,7 @@ public class SaveReplayService {
 
     /** Default constructor — stores snapshots under ~/.bro-ledger/replay/. */
     private SaveReplayService() {
-        this.baseDir = Path.of(System.getProperty("user.home"), ".bro-ledger", "replay");
+        this.baseDir = AppPaths.dataDir().resolve("replay");
     }
 
     /** Package-private constructor for tests — uses the supplied base directory. */
@@ -187,8 +188,7 @@ public class SaveReplayService {
     private byte[] readCurrentAnnotationBytes(Path savePath) {
         String hash     = HexUtils.sha256Hex(savePath.toAbsolutePath().toString());
         Path primary    = savePath.resolveSibling(savePath.getFileName() + ".broledger.json");
-        Path fallback   = Path.of(System.getProperty("user.home"), ".bro-ledger",
-                                  "annotations-" + hash + ".json");
+        Path fallback   = AppPaths.dataDir().resolve("annotations-" + hash + ".json");
         Path source     = Files.exists(primary) ? primary
                         : Files.exists(fallback) ? fallback
                         : null;

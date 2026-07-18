@@ -18,6 +18,7 @@ import se.niclas.broledger.service.DictionaryService;
 import se.niclas.broledger.service.ImageMapService;
 import se.niclas.broledger.service.StatModifierService;
 import se.niclas.broledger.service.WeaponStatsService;
+import se.niclas.broledger.util.AppPaths;
 
 import java.io.File;
 import java.net.URL;
@@ -63,7 +64,10 @@ public class App extends Application {
 
         Image icon = new Image(App.class.getResourceAsStream("/se/niclas/broledger/assets/BroLedger.png"));
         stage.getIcons().add(icon);
-        stage.setTitle("Bro Ledger");
+        String sessionLabel = System.getProperty("broledger.sessionLabel");
+        stage.setTitle(sessionLabel != null && !sessionLabel.isBlank()
+                ? "Bro Ledger — " + sessionLabel
+                : "Bro Ledger");
         stage.setMinWidth(1100);
         stage.setMinHeight(900);
         stage.setScene(scene);
@@ -139,7 +143,7 @@ public class App extends Application {
     private static void setupFileLogging() {
         if (!"true".equalsIgnoreCase(LogManager.getLogManager().getProperty("log.file.enabled"))) return;
         try {
-            Path logDir = Path.of(System.getProperty("user.home"), ".bro-ledger", "logs");
+            Path logDir = AppPaths.dataDir().resolve("logs");
             Files.createDirectories(logDir);
             String ts = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now());
             Path logFile = logDir.resolve("bro-ledger-" + ts + ".log");

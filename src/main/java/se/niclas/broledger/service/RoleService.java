@@ -2,6 +2,7 @@ package se.niclas.broledger.service;
 
 import se.niclas.broledger.model.Role;
 import se.niclas.broledger.model.RolePack;
+import se.niclas.broledger.util.AppPaths;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -23,8 +24,7 @@ public class RoleService {
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .build();
 
-    private static final Path DEFAULT_FILE =
-            Path.of(System.getProperty("user.home"), ".bro-ledger", "roles.json");
+    private static final Path DEFAULT_FILE = AppPaths.dataDir().resolve("roles.json");
 
     private static final Logger log = Logger.getLogger(RoleService.class.getName());
     private static RoleService instance;
