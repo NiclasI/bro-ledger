@@ -94,12 +94,9 @@ public class PerkPlanPane extends VBox {
         });
         for (Map.Entry<Integer, List<Map.Entry<String, DictionaryEntry>>> tierEntry : byTier.entrySet()) {
             List<Map.Entry<String, DictionaryEntry>> list = tierEntry.getValue();
-            if (tierEntry.getKey() == 4) {
-                list.sort(Comparator.<Map.Entry<String, DictionaryEntry>>comparingInt(
-                        e -> OverviewCalc.masteryOrderRank(e.getValue().name)).thenComparing(byName));
-            } else {
-                list.sort(byName);
-            }
+            int tier = tierEntry.getKey();
+            list.sort(Comparator.<Map.Entry<String, DictionaryEntry>>comparingInt(
+                    e -> OverviewCalc.perkOrderRank(tier, e.getValue().name)).thenComparing(byName));
         }
 
         // Build one HBox row per tier

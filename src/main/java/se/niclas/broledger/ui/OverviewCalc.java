@@ -187,21 +187,36 @@ public final class OverviewCalc {
         return tier != null ? "[T" + tier + "] " + name : name;
     }
 
-    /** Combat weapon order for tier-4 "<Weapon> Mastery" perks, matching the in-game perk tree row. */
-    private static final List<String> MASTERY_WEAPON_ORDER = List.of(
-            "Mace", "Flail", "Hammer", "Axe", "Cleaver", "Sword",
-            "Dagger", "Polearm", "Spear", "Crossbow", "Bow", "Throwing");
+    /**
+     * Per-tier custom perk display order, matching the in-game perk tree layout. Edit a tier's
+     * list to reorder its perks; names not present in a tier's list (or tiers not listed here)
+     * sort after recognized ones and ultimately fall back to alphabetical.
+     */
+    private static final Map<Integer, List<String>> PERK_TIER_ORDER = Map.of(
+            1, List.of("Adrenaline", "Bags and Belts", "Colossus", "Crippling Strikes",
+                    "Fast Adaptation", "Nine Lives", "Pathfinder", "Recover", "Student"),
+            2, List.of("Bullseye", "Dodge", "Executioner", "Fortified Mind",
+                    "Gifted", "Quick Hands", "Resilient", "Steel Brow"),
+            3, List.of("Anticipation", "Backstabber", "Brawny", "Rally the Troops",
+                    "Relentless", "Rotation", "Shield Expert", "Taunt"),
+            4, List.of("Mace Mastery", "Flail Mastery", "Hammer Mastery", "Axe Mastery",
+                    "Cleaver Mastery", "Sword Mastery", "Dagger Mastery", "Polearm Mastery",
+                    "Spear Mastery", "Crossbow Mastery", "Bow Mastery", "Throwing Mastery"),
+            5, List.of("Footwork", "Lone Wolf", "Overwhelm", "Reach Advantage", "Underdog"),
+            6, List.of("Battle Forged", "Berserk", "Head Hunter", "Nimble"),
+            7, List.of("Duelist", "Fearsome", "Indomitable", "Killing Frenzy"));
 
     /**
-     * Rank of a tier-4 weapon Mastery perk within {@link #MASTERY_WEAPON_ORDER}, matched by
-     * the "<Weapon> Mastery" name convention (case-insensitive). Returns {@link Integer#MAX_VALUE}
-     * for names that don't match a known mastery, so they sort after recognized ones.
+     * Rank of a perk name within its tier's list in {@link #PERK_TIER_ORDER} (case-insensitive).
+     * Returns {@link Integer#MAX_VALUE} for an unlisted tier or an unrecognized name, so it sorts
+     * after recognized ones (callers should chain a name comparator afterward as the final tiebreaker).
      */
-    public static int masteryOrderRank(String name) {
+    public static int perkOrderRank(int tier, String name) {
         if (name == null) return Integer.MAX_VALUE;
-        for (int i = 0; i < MASTERY_WEAPON_ORDER.size(); i++) {
-            String weapon = MASTERY_WEAPON_ORDER.get(i);
-            if (name.equalsIgnoreCase(weapon + " Mastery")) return i;
+        List<String> order = PERK_TIER_ORDER.get(tier);
+        if (order == null) return Integer.MAX_VALUE;
+        for (int i = 0; i < order.size(); i++) {
+            if (name.equalsIgnoreCase(order.get(i))) return i;
         }
         return Integer.MAX_VALUE;
     }

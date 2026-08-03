@@ -409,45 +409,56 @@ class OverviewCalcTest {
         assertEquals(List.of("A", "B", "C"), sorted);
     }
 
-    // ---- masteryOrderRank ---------------------------------------------------
+    // ---- perkOrderRank ---------------------------------------------------
 
     @Test
-    void masteryOrderRank_firstAndLast() {
-        assertEquals(0, OverviewCalc.masteryOrderRank("Mace Mastery"));
-        assertEquals(11, OverviewCalc.masteryOrderRank("Throwing Mastery"));
+    void perkOrderRank_firstAndLast() {
+        assertEquals(0, OverviewCalc.perkOrderRank(4, "Mace Mastery"));
+        assertEquals(11, OverviewCalc.perkOrderRank(4, "Throwing Mastery"));
     }
 
     @Test
-    void masteryOrderRank_crossbowBeforeBow() {
+    void perkOrderRank_crossbowBeforeBow() {
         // Guards against a naive prefix match confusing "Bow" and "Crossbow".
-        int crossbow = OverviewCalc.masteryOrderRank("Crossbow Mastery");
-        int bow = OverviewCalc.masteryOrderRank("Bow Mastery");
+        int crossbow = OverviewCalc.perkOrderRank(4, "Crossbow Mastery");
+        int bow = OverviewCalc.perkOrderRank(4, "Bow Mastery");
         assertTrue(crossbow < bow);
     }
 
     @Test
-    void masteryOrderRank_caseInsensitive() {
-        assertEquals(0, OverviewCalc.masteryOrderRank("mace mastery"));
+    void perkOrderRank_caseInsensitive() {
+        assertEquals(0, OverviewCalc.perkOrderRank(4, "mace mastery"));
     }
 
     @Test
-    void masteryOrderRank_unknownName_maxValue() {
-        assertEquals(Integer.MAX_VALUE, OverviewCalc.masteryOrderRank("Iron Lungs"));
+    void perkOrderRank_unknownName_maxValue() {
+        assertEquals(Integer.MAX_VALUE, OverviewCalc.perkOrderRank(4, "Iron Lungs"));
     }
 
     @Test
-    void masteryOrderRank_nullName_maxValue() {
-        assertEquals(Integer.MAX_VALUE, OverviewCalc.masteryOrderRank(null));
+    void perkOrderRank_nullName_maxValue() {
+        assertEquals(Integer.MAX_VALUE, OverviewCalc.perkOrderRank(4, null));
     }
 
     @Test
-    void masteryOrderRank_fullSortMatchesRequestedOrder() {
+    void perkOrderRank_unlistedTier_maxValue() {
+        assertEquals(Integer.MAX_VALUE, OverviewCalc.perkOrderRank(99, "Adrenaline"));
+    }
+
+    @Test
+    void perkOrderRank_otherTier_matchesPlaceholderOrder() {
+        assertEquals(0, OverviewCalc.perkOrderRank(1, "Adrenaline"));
+        assertEquals(8, OverviewCalc.perkOrderRank(1, "Student"));
+    }
+
+    @Test
+    void perkOrderRank_fullSortMatchesRequestedOrder() {
         List<String> shuffled = List.of(
                 "Throwing Mastery", "Bow Mastery", "Crossbow Mastery", "Spear Mastery",
                 "Polearm Mastery", "Dagger Mastery", "Sword Mastery", "Cleaver Mastery",
                 "Axe Mastery", "Hammer Mastery", "Flail Mastery", "Mace Mastery");
         List<String> sorted = shuffled.stream()
-                .sorted(Comparator.comparingInt(OverviewCalc::masteryOrderRank))
+                .sorted(Comparator.comparingInt(name -> OverviewCalc.perkOrderRank(4, name)))
                 .toList();
         assertEquals(List.of(
                 "Mace Mastery", "Flail Mastery", "Hammer Mastery", "Axe Mastery",
