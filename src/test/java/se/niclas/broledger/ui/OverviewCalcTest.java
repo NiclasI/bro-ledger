@@ -400,6 +400,35 @@ class OverviewCalcTest {
     }
 
     @Test
+    void perkComparator_TIER_customOrderBreaksTieBeforeAlphabetical() {
+        // Alphabetically "Adrenaline" < "Bags and Belts", but the tier-1 wiki order ranks
+        // "Bags and Belts" (index 4) before "Adrenaline" (index 6).
+        Comparator<String> comp = OverviewCalc.perkComparator(
+                PerkSortMode.TIER, id -> 1, id -> 0L, id -> id);
+        List<String> sorted = List.of("Adrenaline", "Bags and Belts").stream().sorted(comp).toList();
+        assertEquals("Bags and Belts", sorted.get(0));
+        assertEquals("Adrenaline", sorted.get(1));
+    }
+
+    @Test
+    void perkComparator_COMMONALITY_customOrderBreaksTieBeforeAlphabetical() {
+        Comparator<String> comp = OverviewCalc.perkComparator(
+                PerkSortMode.COMMONALITY, id -> 1, id -> 0L, id -> id);
+        List<String> sorted = List.of("Adrenaline", "Bags and Belts").stream().sorted(comp).toList();
+        assertEquals("Bags and Belts", sorted.get(0));
+        assertEquals("Adrenaline", sorted.get(1));
+    }
+
+    @Test
+    void perkComparator_TIER_THEN_COMMON_customOrderBreaksTieBeforeAlphabetical() {
+        Comparator<String> comp = OverviewCalc.perkComparator(
+                PerkSortMode.TIER_THEN_COMMON, id -> 1, id -> 0L, id -> id);
+        List<String> sorted = List.of("Adrenaline", "Bags and Belts").stream().sorted(comp).toList();
+        assertEquals("Bags and Belts", sorted.get(0));
+        assertEquals("Adrenaline", sorted.get(1));
+    }
+
+    @Test
     void perkComparator_OFF_naturalOrder() {
         // OFF mode returns Comparator.naturalOrder() → sorts alphabetically
         List<String> ids = List.of("C", "A", "B");

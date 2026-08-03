@@ -168,11 +168,13 @@ public final class OverviewCalc {
                                               Function<String, String> nameOf) {
         Comparator<String> byTier  = Comparator.comparingInt(tierOf);
         Comparator<String> byCommon = Comparator.comparingLong((String id) -> -countOf.applyAsLong(id));
+        Comparator<String> byOrder = Comparator.comparingInt(
+                (String id) -> perkOrderRank(tierOf.applyAsInt(id), nameOf.apply(id)));
         Comparator<String> byName  = Comparator.comparing(nameOf, String.CASE_INSENSITIVE_ORDER);
         return switch (mode) {
-            case TIER           -> byTier.thenComparing(byName);
-            case COMMONALITY    -> byCommon.thenComparing(byName);
-            case TIER_THEN_COMMON -> byTier.thenComparing(byCommon).thenComparing(byName);
+            case TIER           -> byTier.thenComparing(byOrder).thenComparing(byName);
+            case COMMONALITY    -> byCommon.thenComparing(byOrder).thenComparing(byName);
+            case TIER_THEN_COMMON -> byTier.thenComparing(byCommon).thenComparing(byOrder).thenComparing(byName);
             case OFF            -> Comparator.naturalOrder();
         };
     }
