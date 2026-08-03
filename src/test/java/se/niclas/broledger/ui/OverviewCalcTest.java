@@ -446,8 +446,8 @@ class OverviewCalcTest {
     }
 
     @Test
-    void perkOrderRank_otherTier_matchesPlaceholderOrder() {
-        assertEquals(0, OverviewCalc.perkOrderRank(1, "Adrenaline"));
+    void perkOrderRank_otherTier_matchesWikiOrder() {
+        assertEquals(0, OverviewCalc.perkOrderRank(1, "Fast Adaptation"));
         assertEquals(8, OverviewCalc.perkOrderRank(1, "Student"));
     }
 
